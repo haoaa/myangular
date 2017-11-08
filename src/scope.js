@@ -8,6 +8,7 @@ function Scope(params) {
   this.$$watchers = [];
   this.$$lastDirtyWatch = null;
   this.$$asyncQueue = [];
+  this.$$phase = null;
 }
 
 Scope.prototype.$watch = function (watchFn, listenerFn, valueEq) {
@@ -31,20 +32,23 @@ Scope.prototype.$watch = function (watchFn, listenerFn, valueEq) {
 };
 
 Scope.prototype.$digest = function () {
-  this.$$lastDirtyWatch = null;
-
   var dirty, ttl = 10;
+
+  this.$$lastDirtyWatch = null;
+  this.$beginPhase('$digest');
   do {
     while (this.$$asyncQueue.length) {
       var asyncTask = this.$$asyncQueue.shift();
-      asyncTask.scope.$eval(asyncTask.expression);      
+      asyncTask.scope.$eval(asyncTask.expression);
     }
 
     dirty = this.$$digestOnce();
     if ((dirty || this.$$asyncQueue.length) && !(ttl--)) {
+      this.$clearPhase();
       throw '10 digest iterations reached';
     }
   } while (dirty || this.$$asyncQueue.length);
+  this.$clearPhase();
 };
 
 Scope.prototype.$$digestOnce = function () {
@@ -83,21 +87,42 @@ Scope.prototype.$$areEqual = function (newValue, oldValue, valueEq) {
   }
 };
 
-Scope.prototype.$eval = function(expr, locals){
-  return expr(this,  locals);
+Scope.prototype.$eval = function (expr, locals) {
+  return expr(this, locals);
 };
 
-Scope.prototype.$apply = function(expr){
+Scope.prototype.$apply = function (expr) {
   try {
+    this.$beginPhase('$apply');
     return this.$eval(expr);
   } finally {
+    this.$clearPhase();
     this.$digest();
-  } 
+  }
 };
 
 // $evalAsync takes a function and schedules it to run later but still during the ongoing digest
-Scope.prototype.$evalAsync = function(expr){
-   this.$$asyncQueue.push({scope: this, expression: expr}); 
+Scope.prototype.$evalAsync = function (expr) {
+  var self = this;
+  if (!self.$$phase && !self.$$asyncQueue.length) { //If there’s something in the queue, we already have a timeout set and it will eventually drain the queue.
+    setTimeout(function(){
+      if (self.$$asyncQueue.length) {
+        self.$digest();
+      } 
+    },0);
+  }
+  this.$$asyncQueue.push({ scope: this, expression: expr });
+};
+
+Scope.prototype.$beginPhase = function (phase) {
+  if (this.$$phase) {
+    throw this.$$phase + ' already in progress';
+  }
+  this.$$phase = phase;
+};
+
+Scope.prototype.$clearPhase = function () {
+  this.$$phase = null;
 };
 
 module.exports = Scope;

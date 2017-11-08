@@ -46,8 +46,12 @@ Scope.prototype.$digest = function () {
   }
   do {
     while (this.$$asyncQueue.length) {
-      var asyncTask = this.$$asyncQueue.shift();
-      asyncTask.scope.$eval(asyncTask.expression);
+      try {
+        var asyncTask = this.$$asyncQueue.shift();
+        asyncTask.scope.$eval(asyncTask.expression);
+      } catch (error) {
+        // console.log(error);
+      }
     }
 
     dirty = this.$$digestOnce();
@@ -59,7 +63,11 @@ Scope.prototype.$digest = function () {
   this.$clearPhase();
 
   while (this.$$postDigestQueue.length) {
-    this.$$postDigestQueue.shift()();
+    try {
+      this.$$postDigestQueue.shift()();
+    } catch (error) {
+      // console.log(error);
+    }
   }
 };
 
@@ -151,7 +159,11 @@ Scope.prototype.$applyAsync = function (expr) {
 
 Scope.prototype.$$flushApplyAsync = function () {
   while (this.$$applyAsyncQueue.length) {
-    this.$$applyAsyncQueue.shift()();
+    try {
+      this.$$applyAsyncQueue.shift()();
+    } catch (error) {
+      // console.log(error);
+    }
   }
   this.$$applyAsyncId = null;
 };

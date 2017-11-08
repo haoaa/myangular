@@ -8,6 +8,9 @@ function Scope(params) {
   this.$$watchers = [];
   this.$$lastDirtyWatch = null;
   this.$$asyncQueue = [];
+  this.$$applyAsyncQueue = [];
+  this.$$applyAsyncId = null;
+  this.$$postDigestQueue = [];
   this.$$phase = null;
 }
 
@@ -36,6 +39,11 @@ Scope.prototype.$digest = function () {
 
   this.$$lastDirtyWatch = null;
   this.$beginPhase('$digest');
+
+  if (this.$$applyAsyncId) {
+    clearTimeout(this.$$applyAsyncId);
+    this.$$flushApplyAsync();
+  }
   do {
     while (this.$$asyncQueue.length) {
       var asyncTask = this.$$asyncQueue.shift();
@@ -49,6 +57,10 @@ Scope.prototype.$digest = function () {
     }
   } while (dirty || this.$$asyncQueue.length);
   this.$clearPhase();
+
+  while (this.$$postDigestQueue.length) {
+    this.$$postDigestQueue.shift()();
+  }
 };
 
 Scope.prototype.$$digestOnce = function () {
@@ -105,11 +117,11 @@ Scope.prototype.$apply = function (expr) {
 Scope.prototype.$evalAsync = function (expr) {
   var self = this;
   if (!self.$$phase && !self.$$asyncQueue.length) { //If there’s something in the queue, we already have a timeout set and it will eventually drain the queue.
-    setTimeout(function(){
+    setTimeout(function () {
       if (self.$$asyncQueue.length) {
         self.$digest();
-      } 
-    },0);
+      }
+    }, 0);
   }
   this.$$asyncQueue.push({ scope: this, expression: expr });
 };
@@ -125,4 +137,26 @@ Scope.prototype.$clearPhase = function () {
   this.$$phase = null;
 };
 
+Scope.prototype.$applyAsync = function (expr) {
+  var self = this;
+  self.$$applyAsyncQueue.push(function () {
+    self.$eval(expr);
+  });
+  if (self.$$applyAsyncId === null) {
+    self.$$applyAsyncId = setTimeout(function () {
+      self.$apply(_.bind(self.$$flushApplyAsync, self));
+    }, 0);
+  }
+};
+
+Scope.prototype.$$flushApplyAsync = function () {
+  while (this.$$applyAsyncQueue.length) {
+    this.$$applyAsyncQueue.shift()();
+  }
+  this.$$applyAsyncId = null;
+};
+
+Scope.prototype.$$postDigest = function (fn) {
+  this.$$postDigestQueue.push(fn);
+};
 module.exports = Scope;

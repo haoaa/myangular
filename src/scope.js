@@ -42,8 +42,8 @@ Scope.prototype.$digest = function () {
   this.$root.$$lastDirtyWatch = null;
   this.$beginPhase('$digest');
 
-  if (this.$$applyAsyncId) {
-    clearTimeout(this.$$applyAsyncId);
+  if (this.$root.$$applyAsyncId) {
+    clearTimeout(this.$root.$$applyAsyncId);
     this.$$flushApplyAsync();
   }
   do {
@@ -74,18 +74,18 @@ Scope.prototype.$digest = function () {
 };
 
 Scope.prototype.$$digestOnce = function () {
-  var self = this, 
-  continueLoop = true,
-  dirty;
+  var self = this,
+    continueLoop = true,
+    dirty;
 
-  self.$$everyScope(function(scope){
-    var newValue, oldValue; 
+  self.$$everyScope(function (scope) {
+    var newValue, oldValue;
     _.forEachRight(scope.$$watchers, function (watcher) {
       try {
-        if (watcher) { 
+        if (watcher) {
           newValue = watcher.watchFn(scope);
           oldValue = watcher.last;
-  
+
           if (!scope.$$areEqual(newValue, oldValue, watcher.valueEq)) {
             self.$root.$$lastDirtyWatch = watcher;
             watcher.last = watcher.valueEq ? _.cloneDeep(newValue) : newValue;
@@ -94,7 +94,7 @@ Scope.prototype.$$digestOnce = function () {
               scope);
             dirty = true;
           } else if (self.$root.$$lastDirtyWatch === watcher) {
-            continueLoop = false;            
+            continueLoop = false;
             return false;
           }
         }
@@ -158,8 +158,8 @@ Scope.prototype.$applyAsync = function (expr) {
   self.$$applyAsyncQueue.push(function () {
     self.$eval(expr);
   });
-  if (self.$$applyAsyncId === null) {
-    self.$$applyAsyncId = setTimeout(function () {
+  if (self.$root.$$applyAsyncId === null) {
+    self.$root.$$applyAsyncId = setTimeout(function () {
       self.$apply(_.bind(self.$$flushApplyAsync, self));
     }, 0);
   }
@@ -173,7 +173,7 @@ Scope.prototype.$$flushApplyAsync = function () {
       // console.log(error);
     }
   }
-  this.$$applyAsyncId = null;
+  this.$root.$$applyAsyncId = null;
 };
 
 Scope.prototype.$$postDigest = function (fn) {
@@ -237,11 +237,20 @@ Scope.prototype.$$new = function () {
   var child = new ChildScope();
   return child;
 };
-Scope.prototype.$new = function () {
-  var childScope = Object.create(this); //behavior delegation
+Scope.prototype.$new = function (isolate) {
+  var childScope;
+  if (isolate) {
+    childScope = new Scope();
+    childScope.$root = this.$root;
+    childScope.$$asyncQueue = this.$$asyncQueue;
+    childScope.$$postDigestQueue = this.$$postDigestQueue;
+    childScope.$$applyAsyncQueue = this.$$applyAsyncQueue;
+  } else {
+    childScope = Object.create(this); //behavior delegation
+    childScope.$$watchers = [];
+    childScope.$$children = [];
+  }
   this.$$children.push(childScope);
-  childScope.$$watchers = [];
-  childScope.$$children = [];
   return childScope;
 };
 

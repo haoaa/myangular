@@ -11,6 +11,7 @@ function Scope(params) {
   this.$$applyAsyncQueue = [];
   this.$$applyAsyncId = null;
   this.$$postDigestQueue = [];
+  this.$root = this;
   this.$$children = [];
   this.$$phase = null;
 }
@@ -24,13 +25,13 @@ Scope.prototype.$watch = function (watchFn, listenerFn, valueEq) {
     last: initWatchVal
   };
   this.$$watchers.unshift(watcher);
-  this.$$lastDirtyWatch = null;
+  this.$root.$$lastDirtyWatch = null;
 
   return function () {
     var index = self.$$watchers.indexOf(watcher);
     if (~index) {
       self.$$watchers.splice(index, 1);
-      self.$$lastDirtyWatch = null;
+      self.$root.$$lastDirtyWatch = null;
     }
   };
 };
@@ -38,7 +39,7 @@ Scope.prototype.$watch = function (watchFn, listenerFn, valueEq) {
 Scope.prototype.$digest = function () {
   var dirty, ttl = 10;
 
-  this.$$lastDirtyWatch = null;
+  this.$root.$$lastDirtyWatch = null;
   this.$beginPhase('$digest');
 
   if (this.$$applyAsyncId) {
@@ -81,18 +82,18 @@ Scope.prototype.$$digestOnce = function () {
     var newValue, oldValue; 
     _.forEachRight(scope.$$watchers, function (watcher) {
       try {
-        if (watcher) {
+        if (watcher) { 
           newValue = watcher.watchFn(scope);
           oldValue = watcher.last;
   
           if (!scope.$$areEqual(newValue, oldValue, watcher.valueEq)) {
-            self.$$lastDirtyWatch = watcher;
+            self.$root.$$lastDirtyWatch = watcher;
             watcher.last = watcher.valueEq ? _.cloneDeep(newValue) : newValue;
             watcher.listenerFn(newValue,
               (oldValue === initWatchVal ? newValue : oldValue),
               scope);
             dirty = true;
-          } else if (self.$$lastDirtyWatch === watcher) {
+          } else if (self.$root.$$lastDirtyWatch === watcher) {
             continueLoop = false;            
             return false;
           }
@@ -124,7 +125,7 @@ Scope.prototype.$apply = function (expr) {
     return this.$eval(expr);
   } finally {
     this.$clearPhase();
-    this.$digest();
+    this.$root.$digest();
   }
 };
 
@@ -134,7 +135,7 @@ Scope.prototype.$evalAsync = function (expr) {
   if (!self.$$phase && !self.$$asyncQueue.length) { //If there’s something in the queue, we already have a timeout set and it will eventually drain the queue.
     setTimeout(function () {
       if (self.$$asyncQueue.length) {
-        self.$digest();
+        self.$root.$digest();
       }
     }, 0);
   }

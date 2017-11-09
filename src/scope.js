@@ -11,6 +11,7 @@ function Scope(params) {
   this.$$applyAsyncQueue = [];
   this.$$applyAsyncId = null;
   this.$$postDigestQueue = [];
+  this.$$children = [];
   this.$$phase = null;
 }
 
@@ -72,30 +73,36 @@ Scope.prototype.$digest = function () {
 };
 
 Scope.prototype.$$digestOnce = function () {
-  var self = this, newValue, oldValue, dirty;
+  var self = this, 
+  continueLoop = true,
+  dirty;
 
-  _.forEachRight(this.$$watchers, function (watcher) {
-    try {
-      if (watcher) {
-        newValue = watcher.watchFn(self);
-        oldValue = watcher.last;
-
-        if (!self.$$areEqual(newValue, oldValue, watcher.valueEq)) {
-          self.$$lastDirtyWatch = watcher;
-          watcher.last = watcher.valueEq ? _.cloneDeep(newValue) : newValue;
-          watcher.listenerFn(newValue,
-            (oldValue === initWatchVal ? newValue : oldValue),
-            self);
-          dirty = true;
-        } else if (self.$$lastDirtyWatch === watcher) {
-          return false;
+  self.$$everyScope(function(scope){
+    var newValue, oldValue; 
+    _.forEachRight(scope.$$watchers, function (watcher) {
+      try {
+        if (watcher) {
+          newValue = watcher.watchFn(scope);
+          oldValue = watcher.last;
+  
+          if (!scope.$$areEqual(newValue, oldValue, watcher.valueEq)) {
+            self.$$lastDirtyWatch = watcher;
+            watcher.last = watcher.valueEq ? _.cloneDeep(newValue) : newValue;
+            watcher.listenerFn(newValue,
+              (oldValue === initWatchVal ? newValue : oldValue),
+              scope);
+            dirty = true;
+          } else if (self.$$lastDirtyWatch === watcher) {
+            continueLoop = false;            
+            return false;
+          }
         }
+      } catch (e) {
+        // console.error('$$digestOnce ' + e);
       }
-    } catch (e) {
-      // console.error('$$digestOnce ' + e);
-    }
+    });
+    return continueLoop;
   });
-
   return dirty;
 };
 
@@ -181,13 +188,13 @@ Scope.prototype.$watchGroup = function (watchFns, listenerFn) {
 
   if (watchFns.length === 0) {
     var shouldCall = true;
-    self.$evalAsync(function(){
-      if (shouldCall) {        
-        listenerFn(newValues, oldValues, self); 
+    self.$evalAsync(function () {
+      if (shouldCall) {
+        listenerFn(newValues, oldValues, self);
       }
     });
-    return function(){
-      shouldCall = false; 
+    return function () {
+      shouldCall = false;
     };
   }
 
@@ -201,10 +208,10 @@ Scope.prototype.$watchGroup = function (watchFns, listenerFn) {
     changeReactionScheduled = false;
   }
 
-  var destroyFunctions = _.map(watchFns, function(watchFn, i){
+  var destroyFunctions = _.map(watchFns, function (watchFn, i) {
     return self.$watch(
       watchFn,
-      function(newValue, oldValue, scope){
+      function (newValue, oldValue, scope) {
         newValues[i] = newValue;
         oldValues[i] = oldValue;
 
@@ -213,13 +220,38 @@ Scope.prototype.$watchGroup = function (watchFns, listenerFn) {
           self.$evalAsync(watchGroupListener);
         }
       }
-    ); 
+    );
   });
 
-  return function(){
-    _.each(destroyFunctions, function(destroyFunction){
-      destroyFunction(); 
-    }) ;
+  return function () {
+    _.each(destroyFunctions, function (destroyFunction) {
+      destroyFunction();
+    });
   };
 };
+
+Scope.prototype.$$new = function () {
+  var ChildScope = function () { };
+  ChildScope.prototype = this;
+  var child = new ChildScope();
+  return child;
+};
+Scope.prototype.$new = function () {
+  var childScope = Object.create(this); //behavior delegation
+  this.$$children.push(childScope);
+  childScope.$$watchers = [];
+  childScope.$$children = [];
+  return childScope;
+};
+
+Scope.prototype.$$everyScope = function (fn) {
+  if (fn(this)) {
+    return this.$$children.every(function (child) {
+      return child.$$everyScope(fn);
+    });
+  } else {
+    return false;
+  }
+};
+
 module.exports = Scope;

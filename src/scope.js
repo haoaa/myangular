@@ -92,7 +92,7 @@ Scope.prototype.$$digestOnce = function () {
         }
       }
     } catch (e) {
-      // console.error(e);
+      // console.error('$$digestOnce ' + e);
     }
   });
 
@@ -170,5 +170,56 @@ Scope.prototype.$$flushApplyAsync = function () {
 
 Scope.prototype.$$postDigest = function (fn) {
   this.$$postDigestQueue.push(fn);
+};
+
+Scope.prototype.$watchGroup = function (watchFns, listenerFn) {
+  var self = this,
+    oldValues = [],
+    newValues = [],
+    changeReactionScheduled = false,
+    firstRun = true;
+
+  if (watchFns.length === 0) {
+    var shouldCall = true;
+    self.$evalAsync(function(){
+      if (shouldCall) {        
+        listenerFn(newValues, oldValues, self); 
+      }
+    });
+    return function(){
+      shouldCall = false; 
+    };
+  }
+
+  function watchGroupListener() {
+    if (firstRun) {
+      firstRun = false;
+      listenerFn(newValues, newValues, self);
+    } else {
+      listenerFn(newValues, oldValues, self);
+    }
+    changeReactionScheduled = false;
+  }
+
+  var destroyFunctions = _.map(watchFns, function(watchFn, i){
+    return self.$watch(
+      watchFn,
+      function(newValue, oldValue, scope){
+        newValues[i] = newValue;
+        oldValues[i] = oldValue;
+
+        if (!changeReactionScheduled) {
+          changeReactionScheduled = true;
+          self.$evalAsync(watchGroupListener);
+        }
+      }
+    ); 
+  });
+
+  return function(){
+    _.each(destroyFunctions, function(destroyFunction){
+      destroyFunction(); 
+    }) ;
+  };
 };
 module.exports = Scope;

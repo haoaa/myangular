@@ -271,9 +271,61 @@ Scope.prototype.$destroy = function () {
     var siblings = this.$parent.$$children;
     var idxOfThis = siblings.indexOf(this);
     if (idxOfThis) {
-      siblings.splice(idxOfThis,1);
+      siblings.splice(idxOfThis, 1);
     }
   }
   this.$$watchers = null;
 };
+
+Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
+  var self = this;
+  var newValue,
+    oldValue,
+    changeCount = 0;
+
+  var internalWatchFn = function (scope) {
+    newValue = watchFn(scope);
+
+    if (_.isObject(newValue)) {
+      if (isArrayLike(newValue)) {
+        if (!_.isArray(oldValue)) {
+          changeCount++;
+          oldValue = [];
+        }
+        if (newValue.length !== oldValue.length) { // compare partial difference with the last change
+          oldValue.length = newValue.length;
+          changeCount++;
+        }
+        _.each(newValue, function (item, i) {
+          if (!self.$$areEqual(item, oldValue[i], false)) {
+            oldValue[i] = item;
+            changeCount++;
+          }
+        });
+      } else {
+
+      }
+    } else {
+      if (!self.$$areEqual(newValue, oldValue, false)) {
+        changeCount++;
+      }
+      oldValue = newValue;
+    }
+
+    return changeCount;
+  };
+  var internalListenerFn = function () {
+    listenerFn(newValue, oldValue, self);
+  };
+  return this.$watch(internalWatchFn, internalListenerFn);
+};
+
+function isArrayLike(obj) {
+  if (_.isNull(obj) || _.isUndefined(obj)) {
+    return false;
+  }
+  var length = obj.length;
+  return _.isNumber(length);
+}
+
 module.exports = Scope;

@@ -237,20 +237,22 @@ Scope.prototype.$$new = function () {
   var child = new ChildScope();
   return child;
 };
-Scope.prototype.$new = function (isolate) {
+Scope.prototype.$new = function (isolate, parent) {
   var childScope;
+  parent = parent || this;
   if (isolate) {
     childScope = new Scope();
-    childScope.$root = this.$root;
-    childScope.$$asyncQueue = this.$$asyncQueue;
-    childScope.$$postDigestQueue = this.$$postDigestQueue;
-    childScope.$$applyAsyncQueue = this.$$applyAsyncQueue;
+    childScope.$root = parent.$root;
+    childScope.$$asyncQueue = parent.$$asyncQueue;
+    childScope.$$postDigestQueue = parent.$$postDigestQueue;
+    childScope.$$applyAsyncQueue = parent.$$applyAsyncQueue;
   } else {
     childScope = Object.create(this); //behavior delegation
     childScope.$$watchers = [];
     childScope.$$children = [];
   }
-  this.$$children.push(childScope);
+  childScope.$parent = parent;
+  parent.$$children.push(childScope);
   return childScope;
 };
 
@@ -264,4 +266,14 @@ Scope.prototype.$$everyScope = function (fn) {
   }
 };
 
+Scope.prototype.$destroy = function () {
+  if (this.$parent) {
+    var siblings = this.$parent.$$children;
+    var idxOfThis = siblings.indexOf(this);
+    if (idxOfThis) {
+      siblings.splice(idxOfThis,1);
+    }
+  }
+  this.$$watchers = null;
+};
 module.exports = Scope;

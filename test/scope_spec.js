@@ -1531,6 +1531,14 @@ describe('Scope', function () {
         scope[method]('someEvent');
         expect(nextListener).toHaveBeenCalled();
       });
+      it('is sets defaultPrevented when preventDefault called on ' + method, function () {
+        var listener = function (event) {
+          event.preventDefault();
+        };
+        scope.$on('someEvent', listener);
+        var event = scope[method]('someEvent');
+        expect(event.defaultPrevented).toBe(true);
+      });
     });
     it('propagates up the scope hierarchy on $emit', function () {
       var parentListener = jasmine.createSpy();
@@ -1660,6 +1668,18 @@ describe('Scope', function () {
       scope.$on('someEvent', listener2);
       scope.$emit('someEvent');
       expect(listener2).toHaveBeenCalled();
+    });
+    it('fires $destroy when destroyed', function () {
+      var listener = jasmine.createSpy();
+      scope.$on('$destroy', listener);
+      scope.$destroy();
+      expect(listener).toHaveBeenCalled();
+    });
+    it('fires $destroy on children destroyed', function () {
+      var listener = jasmine.createSpy();
+      child.$on('$destroy', listener);
+      scope.$destroy();
+      expect(listener).toHaveBeenCalled();
     });
   });
 

@@ -77,5 +77,22 @@ describe('parse', function () {
         var fn = parse('false');
         expect(fn()).toBe(false);
     });
+    it('ignores whitespace', function () {
+        var fn = parse(' \n42 ');
+        expect(fn()).toEqual(42);
+    });
+    it('will parse an empty array', function () {
+        var fn = parse('[]');
+        expect(fn()).toEqual([]);
+    });
+    it('will parse a non-empty array', function () {
+        var fn = parse('[1, "two", [3],true,null]');
+        expect(fn()).toEqual([1, "two", [3], true, null]);
+    });
+    it('will parse an array with trailing commas', function () {
+        var fn = parse('[1, 2, 3, ]');
+        expect(fn()).toEqual([1, 2, 3]);
+    });
+
 
 });

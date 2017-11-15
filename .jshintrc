@@ -2,6 +2,7 @@
   "browser": true,
   "browserify": true,
   "devel": true,
+  "laxbreak":true,
   "globals": {
     "jasmine": false,
     "describe": false,

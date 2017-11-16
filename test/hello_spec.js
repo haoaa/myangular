@@ -1,6 +1,6 @@
 var sayHello = require('../src/hello'); 
 
-describe('Hello', function(){
+xdescribe('Hello', function(){
   it('say Hello', function(){
     expect(sayHello('John')).toBe('Hello, John!');
   });

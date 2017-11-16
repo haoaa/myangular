@@ -7,6 +7,8 @@
     "jasmine": false,
     "describe": false,
     "it": false,
+    "xdescribe" : false,
+    "xit" : false,
     "expect": false,
     "beforeEach": false,
     "afterEach": false

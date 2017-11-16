@@ -192,12 +192,24 @@ AST.prototype.primary = function () {
     } else {
         primary = this.constant();
     }
-    while (this.expect('.')) {
-        primary = {
-            type: AST.MemberExpression,
-            object: primary,
-            property: this.identifier()
-        };
+    var next;
+    while ((next = this.expect('.', '['))) {
+        if (next.text === '[') {
+            primary = {
+                type: AST.MemberExpression,
+                object: primary,
+                property: this.primary(),
+                computed: true
+            };
+            this.consume(']');
+        } else {
+            primary = {
+                type: AST.MemberExpression,
+                object: primary,
+                property: this.identifier(),
+                computed: false
+            };
+        }
     }
 
     return primary;
@@ -243,15 +255,16 @@ AST.prototype.constant = function () {
     return { type: AST.Literal, value: this.consume().value };
 };
 
-AST.prototype.expect = function (e) {
-    var token = this.peek(e);
+AST.prototype.expect = function (e1, e2, e3, e4) {
+    var token = this.peek(e1, e2, e3, e4);
     if (token) {
         return this.tokens.shift();
     }
 };
-AST.prototype.peek = function (e) {
+AST.prototype.peek = function (e1, e2, e3, e4) {
     if (this.tokens.length > 0) {
-        if (this.tokens[0].text === e || !e) {
+        var text = this.tokens[0].text;
+        if (e1 === text || e2 === text || e3 === text || e4 === text || (!e1 && !e2 && !e3 && !e4)) {
             return this.tokens[0];
         }
     }
@@ -319,10 +332,16 @@ ASTCompiler.prototype.recurse = function (ast) {
         case AST.MemberExpression:
             intoId = this.nextId();
             var left = this.recurse(ast.object);
-            this.if_(left,
-                this.assign(intoId, this.nonComputedMember(left, ast.property.name)));
+            if (ast.computed) {
+                var right = this.recurse(ast.property);
+                this.if_(left,
+                    this.assign(intoId, this.computedMember(left, right)))
+            } else {
+                this.if_(left,
+                    this.assign(intoId, this.nonComputedMember(left, ast.property.name)));
+            }
             return intoId;
-                    
+
     }
 };
 
@@ -333,6 +352,9 @@ ASTCompiler.prototype.nextId = function () {
 };
 ASTCompiler.prototype.nonComputedMember = function (left, right) {
     return '(' + left + ').' + right;
+};
+ASTCompiler.prototype.computedMember = function (left, right) {
+    return '(' + left + ')[' + right + ']';
 };
 ASTCompiler.prototype.if_ = function (test, consequent) {
     this.state.body.push('if(', test, '){', consequent, '}');

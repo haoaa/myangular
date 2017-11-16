@@ -33,3 +33,21 @@ function (s) {
   return v0;
 }
 ```
+
+### ast node look like these
+```json
+{
+    "type":"Program",
+    "body":{
+        "type":"MemberExpression",
+        "object":{
+            "type":"Identifier",
+            "name":"aKey"
+        },
+        "property":{
+            "type":"Identifier",
+            "name":"anotherKey"
+        }
+    }
+}
+```

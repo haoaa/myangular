@@ -16,7 +16,11 @@
         "no-console": 0,
         "no-multi-str": 1,
         "no-useless-escape": [0],
-        "no-trailing-spaces": 1
+        "no-trailing-spaces": 1,
+        "semi":2,
+        "comma-style": ["error", "last"],
+        "comma-spacing" : "error",
+        "comma-dangle": 2
     },
     "globals": {
 

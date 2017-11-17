@@ -38,12 +38,8 @@ describe('parse', function() {
         expect(fn()).toBe(42);
     });
     it('will not parse invalid scientific notation', function() {
-        expect(function() {
-            parse('.e4');
-        }).toThrow();
-        expect(function() {
-            parse('42e-a');
-        }).toThrow();
+        expect(function() {parse('.e4');}).toThrow();
+        expect(function() {parse('42e-a');}).toThrow();
     });
     it('can parse a string in single quotes', function() {
         var fn = parse('\'abc\'');
@@ -198,7 +194,7 @@ describe('parse', function() {
         expect(fn({
             aFunction: function() {
                 return 42;
-            },
+            }
         })).toBe(42);
     });
     it('parses a function call with a single number argument', function() {
@@ -206,7 +202,7 @@ describe('parse', function() {
         expect(fn({
             aFunction: function(n) {
                 return n;
-            },
+            }
         })).toBe(42);
     });
     it('parses a function call with a single identifier argument', function() {
@@ -214,7 +210,7 @@ describe('parse', function() {
         expect(fn({
             n: 42, aFunction: function(arg) {
                 return arg;
-            },
+            }
         })).toBe(42);
     });
     it('parses a function call with a single function call argument',
@@ -224,7 +220,7 @@ describe('parse', function() {
                 argFn: _.constant(42),
                 aFunction: function(arg) {
                     return arg;
-                },
+                }
             })).toBe(42);
         });
     it('parses a function call with multiple arguments', function() {
@@ -234,7 +230,7 @@ describe('parse', function() {
             argFn: _.constant(2),
             aFunction: function(a1, a2, a3) {
                 return a1 + a2 + a3;
-            },
+            }
         })).toBe(42);
     });
     it('calls methods accessed as computed properties', function() {
@@ -243,8 +239,8 @@ describe('parse', function() {
                 aMember: 42,
                 aFunction: function() {
                     return this.aMember;
-                },
-            },
+                }
+            }
         };
         var fn = parse('anObject["aFunction"]()');
         expect(fn(scope)).toBe(42);
@@ -255,8 +251,8 @@ describe('parse', function() {
                 aMember: 42,
                 aFunction: function() {
                     return this.aMember;
-                },
-            },
+                }
+            }
         };
         var fn = parse('anObject.aFunction()');
         expect(fn(scope)).toBe(42);
@@ -265,7 +261,7 @@ describe('parse', function() {
         var scope = {
             aFunction: function() {
                 return this;
-            },
+            }
         };
         var fn = parse('aFunction()');
         expect(fn(scope)).toBe(scope);
@@ -275,7 +271,7 @@ describe('parse', function() {
         var locals = {
             aFunction: function() {
                 return this;
-            },
+            }
         };
         var fn = parse('aFunction()');
         expect(fn(scope, locals)).toBe(locals);
@@ -354,4 +350,65 @@ describe('parse', function() {
             fn({obj: {}});
         }).toThrow();
     });
+    it('does not allow accessing window as computed property', function() {
+        var fn = parse('anObject["wnd"]');
+        expect(function() { fn({anObject: {wnd: window}}); }).toThrow();
+    });
+    it('does not allow accessing window as non-computed property', function() {
+        var fn = parse('anObject.wnd');
+        expect(function() { fn({anObject: {wnd: window}}); }).toThrow();
+    });
+    it('does not allow passing window as function argument', function() {
+        var fn = parse('aFunction(wnd)');
+        expect(function() {
+            fn({aFunction: function() { }, wnd: window});
+        }).toThrow();
+    });
+    it('does not allow calling methods on window', function() {
+        var fn = parse('wnd.scrollTo(0)');
+        expect(function() {
+            fn({wnd: window});
+        }).toThrow();
+    });
+    it('does not allow functions to return window', function() {
+        var fn = parse('getWnd()');
+        expect(function() { fn({getWnd: _.constant(window)}); }).toThrow();
+    });
+    it('does not allow assigning window', function() {
+        var fn = parse('wnd = anObject');
+        expect(function() {
+            fn({anObject: window});
+        }).toThrow();
+    });
+    it('does not allow referencing window', function() {
+        var fn = parse('wnd');
+        expect(function() {
+            fn({wnd: window});
+        }).toThrow();
+    });
+    it('does not allow calling functions on DOM elements', function() {
+        var fn = parse('el.setAttribute("evil", "true")');
+        expect(function() { fn({el: document.documentElement}); }).toThrow();
+    });
+    it('does not allow calling the aliased function constructor', function() {
+        var fn = parse('fnConstructor("return window;")');
+        expect(function() {
+            fn({fnConstructor: (function() { }).constructor});
+        }).toThrow();
+    });
+    it('does not allow calling functions on Object', function() {
+        var fn = parse('obj.create({})');
+        expect(function() {
+            fn({obj: Object});
+        }).toThrow();
+    });
+    it('does not allow calling call', function() {
+        var fn = parse('fun.call(obj)');
+        expect(function() { fn({fun: function() { }, obj: {}}); }).toThrow();
+    });
+    it('does not allow calling apply', function() {
+        var fn = parse('fun.apply(obj)');
+        expect(function() { fn({fun: function() { }, obj: {}}); }).toThrow();
+    });
+
 });

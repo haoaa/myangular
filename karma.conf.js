@@ -16,5 +16,5 @@ module.exports = function(config) {
             debug: true,
             bundleDelay: 2000 // Fixes "reload" error messages, YMMV!
         }
-    })
+    });
 };

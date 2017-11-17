@@ -7,8 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "lint": "eslint src test *.js --fix",
-    "pretest": "eslint src test --fix",
+    "lint": "eslint  --ext .js src test --fix",
+    "pretest": "npm run lint",
     "test": "karma start"
   },
   "keywords": [],

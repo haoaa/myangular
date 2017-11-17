@@ -16,8 +16,8 @@ Lexer.prototype.lex = function (text) {
     this.tokens = [];
     while (this.index < this.text.length) {
         this.ch = this.text.charAt(this.index);
-        if (this.isNumber(this.ch) ||
-            (this.is('.') && this.isNumber(this.peek()))) {
+        if (this.isNumber(this.ch)
+            || (this.is('.') && this.isNumber(this.peek()))) {
             this.readNumber();
         } else if (this.is('\'"')) {
             this.readString(this.ch);
@@ -49,12 +49,12 @@ Lexer.prototype.isExpOperator = function (ch) {
     return ch === '-' || ch === '+' || this.isNumber(ch);
 };
 Lexer.prototype.isIdent = function (ch) {
-    return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
-        ch === '_' || ch === '$';
+    return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
+        || ch === '_' || ch === '$';
 };
 Lexer.prototype.isWhitespace = function (ch) {
-    return ch === ' ' || ch === '\r' || ch === '\t' ||
-        ch === '\n' || ch === '\v' || ch === '\u00A0';
+    return ch === ' ' || ch === '\r' || ch === '\t'
+        || ch === '\n' || ch === '\v' || ch === '\u00A0';
 };
 
 Lexer.prototype.readNumber = function () {
@@ -92,8 +92,7 @@ Lexer.prototype.readString = function (quote) {
         var ch = this.text.charAt(this.index);
         if (escape) {
             if (ch === 'u') {
-                var hex = this.text.substring
-                    (this.index + 1, this.index + 5);
+                var hex = this.text.substring(this.index + 1, this.index + 5);
                 if (!hex.match(/[\da-f]{4}/i)) {
                     throw 'Invalid unicode escape';
                 }
@@ -152,6 +151,7 @@ Lexer.prototype.peek = function () {
 function AST(lexer) {
     this.lexer = lexer;
 }
+
 AST.Program = 'Program';
 AST.Literal = 'Literal';
 AST.ArrayExpression = 'ArrayExpression';
@@ -181,6 +181,15 @@ AST.prototype.ast = function (text) {
 AST.prototype.program = function () {
     return { type: AST.Program, body: this.assignment() };
 };
+AST.prototype.assignment = function () {
+    var left = this.primary();
+    if (this.expect('=')) {
+        var right = this.primary();
+        return { type: AST.AssignmentExpression, left: left, right: right };
+    }
+    return left;
+};
+
 AST.prototype.primary = function () {
     var primary;
     if (this.expect('[')) {
@@ -259,7 +268,7 @@ AST.prototype.identifier = function () {
     return { type: AST.Identifier, name: this.consume().text };
 };
 AST.prototype.constant = function () {
-    //this line will fix failed test case "will not parse invalid scientific notation"
+    // this line will fix failed test case "will not parse invalid scientific notation"
     if (this.peek().value === undefined) throw 'Invalid constant: ' + this.peek().text;
     return { type: AST.Literal, value: this.consume().value };
 };
@@ -294,18 +303,12 @@ AST.prototype.parseArguments = function () {
     }
     return args;
 };
-AST.prototype.assignment = function () {
-    var left = this.primary();
-    if (this.expect('=')) {
-        var right = this.primary();
-        return { type: AST.AssignmentExpression, left: left, right: right };
-    }
-    return left;
-};
+
 
 function ASTCompiler(astBuilder) {
     this.astBuilder = astBuilder;
 }
+
 ASTCompiler.prototype.compile = function (text) {
     var ast = this.astBuilder.ast(text);
     // console.debug('ast ', JSON.stringify(ast));
@@ -315,8 +318,8 @@ ASTCompiler.prototype.compile = function (text) {
     /* jshint -W054 */
     return new Function('s', 'l',
         (this.state.vars.length > 0 ?
-            'var ' + this.state.vars.join(',') + ';'
-            : ''
+            'var ' + this.state.vars.join(',') + ';' :
+            ''
         ) + this.state.body.join(''));
     /* jshint +W054 */
 };
@@ -336,22 +339,22 @@ ASTCompiler.prototype.recurse = function (ast, context, create) {
         case AST.ObjectExpression:
             var properties = _.map(ast.properties, _.bind(function (property) {
                 var key = property.key.type === AST.Identifier ?
-                    property.key.name
-                    : this.escape(property.key.value);
+                    property.key.name :
+                    this.escape(property.key.value);
                 var value = this.recurse(property.value);
                 return key + ':' + value;
             }, this));
             return '{' + properties.join(',') + '}';
         case AST.Identifier:
             intoId = this.nextId();
-            // get ast.name from locals
+            // get ast.name from locals and set to the variable
             this.if_('l',
                 this.assign(intoId, this.nonComputedMember('l', ast.name)));
-            // set {} to scope
+            // set empty object to undefind property on scope
             if (create) {
-                this.if_(this.not(this.getHasOwnProperty('l', ast.name)) +
-                    ' && s && ' +
-                    this.not(this.getHasOwnProperty('s', ast.name)),
+                this.if_(this.not(this.getHasOwnProperty('l', ast.name))
+                    + ' && s && '
+                    + this.not(this.getHasOwnProperty('s', ast.name)),
                     this.assign(this.nonComputedMember('s', ast.name), '{}'));
             }
             // get ast.name from scope
@@ -369,13 +372,14 @@ ASTCompiler.prototype.recurse = function (ast, context, create) {
             return 'l';
         case AST.MemberExpression:
             intoId = this.nextId();
+            // recurse set up left hand side
             var left = this.recurse(ast.object, undefined, create);
             if (context) {
                 context.context = left;
             }
             if (ast.computed) {
                 var right = this.recurse(ast.property);
-                if (create) {
+                if (create) { // set empty object to undefind property
                     this.if_(this.not(this.computedMember(left, right)),
                         this.assign(this.computedMember(left, right), '{}'));
                 }
@@ -414,7 +418,7 @@ ASTCompiler.prototype.recurse = function (ast, context, create) {
             return callee + '&&' + callee + '(' + args.join(',') + ')';
         case AST.AssignmentExpression:
             var leftContext = {};
-            this.recurse(ast.left, leftContext, true);
+            this.recurse(ast.left, leftContext, true);// recursing create any missing object on the left side
             var leftExpr;
             if (leftContext.computed) {
                 leftExpr = this.computedMember(leftContext.context, leftContext.name);
@@ -455,8 +459,8 @@ ASTCompiler.prototype.stringEscapeFn = function (c) {
 };
 ASTCompiler.prototype.escape = function (value) {
     if (_.isString(value)) {
-        return '\'' +
-            value.replace(this.stringEscapeRegex, this.stringEscapeFn) + '\'';
+        return '\''
+            + value.replace(this.stringEscapeRegex, this.stringEscapeFn) + '\'';
     } else if (_.isNull(value)) {
         return 'null';
     } else {
@@ -465,12 +469,12 @@ ASTCompiler.prototype.escape = function (value) {
 };
 
 
-
 function Parser(lexer) {
     this.lexer = lexer;
     this.ast = new AST(this.lexer);
     this.astCompiler = new ASTCompiler(this.ast);
 }
+
 Parser.prototype.parse = function (text) {
     return this.astCompiler.compile(text);
 };

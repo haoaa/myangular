@@ -1,0 +1,26 @@
+{
+  "root": true,
+  //ESLint will stop looking in parent folders once it finds a configuration with "root": true.
+  "extends": "eslint:recommended",
+  "env": {
+    "browser": true,
+    "node": true,
+    "jasmine": true,
+    "phantomjs": true
+  },
+  "rules": {
+    "no-unused-vars": "off",
+    "no-console": "off",
+     "no-useless-escape":"warn"
+  },
+  "globals": {
+    //    "jasmine": false,
+    //    "describe": false,
+    //    "it": false,
+    //    "xdescribe": false,
+    //    "xit": false,
+    //    "expect": false,
+    //    "beforeEach": false,
+    //    "afterEach": false
+  }
+}

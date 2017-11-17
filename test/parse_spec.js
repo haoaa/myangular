@@ -38,8 +38,12 @@ describe('parse', function () {
         expect(fn()).toBe(42);
     });
     it('will not parse invalid scientific notation', function () {
-        expect(function () { parse('.e4'); }).toThrow();
-        expect(function () { parse('42e-a'); }).toThrow();
+        expect(function () {
+            parse('.e4');
+        }).toThrow();
+        expect(function () {
+            parse('42e-a');
+        }).toThrow();
     });
     it('can parse a string in single quotes', function () {
         var fn = parse("'abc'");
@@ -50,7 +54,9 @@ describe('parse', function () {
         expect(fn()).toEqual('abc');
     });
     it('will not parse a string with mismatching quotes', function () {
-        expect(function () { parse('"abc\''); }).toThrow();
+        expect(function () {
+            parse('"abc\'');
+        }).toThrow();
     });
     it('can parse a string with single quotes inside', function () {
         var fn = parse("'a\\\'b'");
@@ -65,7 +71,9 @@ describe('parse', function () {
         expect(fn()).toEqual('\u00A0');
     });
     it('will not parse a string with invalid unicode escapes', function () {
-        expect(function () { parse('"\\u00T0"'); }).toThrow();
+        expect(function () {
+            parse('"\\u00T0"');
+        }).toThrow();
     });
     it('will parse null', function () {
         var fn = parse('null');
@@ -186,21 +194,35 @@ describe('parse', function () {
     });
     it('parses a function call', function () {
         var fn = parse('aFunction()');
-        expect(fn({ aFunction: function () { return 42; } })).toBe(42);
+        expect(fn({
+            aFunction: function () {
+                return 42;
+            }
+        })).toBe(42);
     });
     it('parses a function call with a single number argument', function () {
         var fn = parse('aFunction(42)');
-        expect(fn({ aFunction: function (n) { return n; } })).toBe(42);
+        expect(fn({
+            aFunction: function (n) {
+                return n;
+            }
+        })).toBe(42);
     });
     it('parses a function call with a single identifier argument', function () {
         var fn = parse('aFunction(n)');
-        expect(fn({ n: 42, aFunction: function (arg) { return arg; } })).toBe(42);
+        expect(fn({
+            n: 42, aFunction: function (arg) {
+                return arg;
+            }
+        })).toBe(42);
     });
     it('parses a function call with a single function call argument', function () {
         var fn = parse('aFunction(argFn())');
         expect(fn({
             argFn: _.constant(42),
-            aFunction: function (arg) { return arg; }
+            aFunction: function (arg) {
+                return arg;
+            }
         })).toBe(42);
     });
     it('parses a function call with multiple arguments', function () {
@@ -208,7 +230,9 @@ describe('parse', function () {
         expect(fn({
             n: 3,
             argFn: _.constant(2),
-            aFunction: function (a1, a2, a3) { return a1 + a2 + a3; }
+            aFunction: function (a1, a2, a3) {
+                return a1 + a2 + a3;
+            }
         })).toBe(42);
     });
     it('calls methods accessed as computed properties', function () {
@@ -291,5 +315,25 @@ describe('parse', function () {
         expect(scope.some.nested.property.path).toBe(42);
     });
 
+    it('does not allow calling the function constructor', function () {
+        expect(function () {
+            var fn = parse('aFunction.constructor("return window;")()');
+            fn({
+                aFunction: function () {
+                }
+            });
+        }).toThrow();
+    });
+    it('does not allow accessing __proto__', function () {
+        expect(function () {
+            var fn = parse('obj.__proto__');
+            fn({ obj: {} });
+        }).toThrow();
+    });
+    it('does not allow calling __defineGetter__', function () {
+        expect(function () {
+            var fn = parse('obj.__defineGetter__("evil", fn)');
+        });
+    });
 
 });

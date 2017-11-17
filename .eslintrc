@@ -1,26 +1,24 @@
 {
-  "root": true,
-  //ESLint will stop looking in parent folders once it finds a configuration with "root": true.
-  "extends": "eslint:recommended",
-  "env": {
-    "browser": true,
-    "node": true,
-    "jasmine": true,
-    "phantomjs": true
-  },
-  "rules": {
-    "no-unused-vars": "off",
-    "no-console": "off",
-     "no-useless-escape":"warn"
-  },
-  "globals": {
-    //    "jasmine": false,
-    //    "describe": false,
-    //    "it": false,
-    //    "xdescribe": false,
-    //    "xit": false,
-    //    "expect": false,
-    //    "beforeEach": false,
-    //    "afterEach": false
-  }
+    "root": true,
+    //ESLint will stop looking in parent folders once it finds a configuration with "root": true.
+    "extends": "eslint:recommended",
+    "env": {
+        "browser": true,
+        "node": true,
+        "jasmine": true,
+        "phantomjs": true
+    },
+    "rules": {
+//        "key-spacing" :["error", { "beforeColon": true }],
+        "indent": [1 , 4],
+        "operator-linebreak": [2, "after", {"overrides": {"?": "after", ":": "after"}}],
+        "no-unused-vars": "off",
+        "no-console": 0,
+        "no-multi-str": 1,
+        "no-useless-escape": [0],
+        "no-trailing-spaces": 1
+    },
+    "globals": {
+
+    }
 }

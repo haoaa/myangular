@@ -888,7 +888,7 @@ xdescribe('Scope', function() {
         it('does not shadow members of parent scopes attributes', function() {
             var parent = new Scope();
             var child = parent.$new();
-            parent.user = { name: 'Joe' };
+            parent.user = { name : 'Joe' };
             child.user.name = 'Jill';
             expect(child.user.name).toBe('Jill');
             expect(parent.user.name).toBe('Jill');
@@ -1290,7 +1290,7 @@ xdescribe('Scope', function() {
             );
             scope.$digest();
             expect(scope.counter).toBe(1);
-            scope.obj = { a: 1 };
+            scope.obj = { a : 1 };
             scope.$digest();
             expect(scope.counter).toBe(2);
             scope.$digest();
@@ -1298,7 +1298,7 @@ xdescribe('Scope', function() {
         });
         it('notices when an attribute is added to an object', function() {
             scope.counter = 0;
-            scope.obj = { a: 1 };
+            scope.obj = { a : 1 };
             scope.$watchCollection(
                 function(scope) { return scope.obj; },
                 function(newValue, oldValue, scope) {
@@ -1315,7 +1315,7 @@ xdescribe('Scope', function() {
         });
         it('notices when an attribute is changed in an object', function() {
             scope.counter = 0;
-            scope.obj = { a: 1 };
+            scope.obj = { a : 1 };
             scope.$watchCollection(
                 function(scope) { return scope.obj; },
                 function(newValue, oldValue, scope) {
@@ -1332,7 +1332,7 @@ xdescribe('Scope', function() {
         });
         it('does not fail on NaN attributes in objects', function() {
             scope.counter = 0;
-            scope.obj = { a: NaN };
+            scope.obj = { a : NaN };
             scope.$watchCollection(
                 function(scope) { return scope.obj; },
                 function(newValue, oldValue, scope) {
@@ -1344,7 +1344,7 @@ xdescribe('Scope', function() {
         });
         it('notices when an attribute is removed from an object', function() {
             scope.counter = 0;
-            scope.obj = { a: 1 };
+            scope.obj = { a : 1 };
             scope.$watchCollection(
                 function(scope) { return scope.obj; },
                 function(newValue, oldValue, scope) {
@@ -1360,7 +1360,7 @@ xdescribe('Scope', function() {
             expect(scope.counter).toBe(2);
         });
         it('does not consider any object with a length property an array', function() {
-            scope.obj = { length: 42, otherKey: 'abc' };
+            scope.obj = { length : 42, otherKey : 'abc' };
             scope.counter = 0;
             scope.$watchCollection(
                 function(scope) { return scope.obj; },
@@ -1402,7 +1402,7 @@ xdescribe('Scope', function() {
             expect(oldValueGiven).toEqual([1, 2, 3]);
         });
         it('gives the old object value to listeners', function() {
-            scope.aValue = { a: 1, b: 2 };
+            scope.aValue = { a : 1, b : 2 };
             var oldValueGiven;
             scope.$watchCollection(
                 function(scope) { return scope.aValue; },
@@ -1413,10 +1413,10 @@ xdescribe('Scope', function() {
             scope.$digest();
             scope.aValue.c = 3;
             scope.$digest();
-            expect(oldValueGiven).toEqual({ a: 1, b: 2 });
+            expect(oldValueGiven).toEqual({ a : 1, b : 2 });
         });
         it('uses the new value as the old value on first digest', function() {
-            scope.aValue = { a: 1, b: 2 };
+            scope.aValue = { a : 1, b : 2 };
             var oldValueGiven;
             scope.$watchCollection(
                 function(scope) { return scope.aValue; },
@@ -1425,7 +1425,7 @@ xdescribe('Scope', function() {
                 }
             );
             scope.$digest();
-            expect(oldValueGiven).toEqual({ a: 1, b: 2 });
+            expect(oldValueGiven).toEqual({ a : 1, b : 2 });
         });
     });
 
@@ -1448,8 +1448,8 @@ xdescribe('Scope', function() {
             scope.$on('someEvent', listener2);
             scope.$on('someOtherEvent', listener3);
             expect(scope.$$listeners).toEqual({
-                someEvent: [listener1, listener2],
-                someOtherEvent: [listener3]
+                someEvent : [listener1, listener2],
+                someOtherEvent : [listener3]
             });
         });
         it('registers different listeners for every scope', function() {
@@ -1459,9 +1459,9 @@ xdescribe('Scope', function() {
             scope.$on('someEvent', listener1);
             child.$on('someEvent', listener2);
             isolatedChild.$on('someEvent', listener3);
-            expect(scope.$$listeners).toEqual({ someEvent: [listener1] });
-            expect(child.$$listeners).toEqual({ someEvent: [listener2] });
-            expect(isolatedChild.$$listeners).toEqual({ someEvent: [listener3] });
+            expect(scope.$$listeners).toEqual({ someEvent : [listener1] });
+            expect(child.$$listeners).toEqual({ someEvent : [listener2] });
+            expect(isolatedChild.$$listeners).toEqual({ someEvent : [listener3] });
         });
         _.each(['$emit', '$broadcast'], function(method) {
             it('calls the listeners of the matching event on ' + method, function() {

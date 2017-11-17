@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 
-module.exports = function (config) {
+module.exports = function(config) {
     config.set({
         frameworks: ['browserify', 'jasmine'],
         files: [
@@ -17,4 +17,4 @@ module.exports = function (config) {
             bundleDelay: 2000 // Fixes "reload" error messages, YMMV!
         }
     })
-}
+};

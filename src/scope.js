@@ -2,7 +2,7 @@
 
 var _ = require('lodash');
 
-function initWatchVal() { }
+function initWatchVal() {}
 
 function Scope(params) {
     this.$$watchers = [];
@@ -37,7 +37,7 @@ Scope.prototype.$watch = function(watchFn, listenerFn, valueEq) {
     };
 };
 
-Scope.prototype.$digest = function() {
+Scope.prototype.$digest = function () {
     var dirty, ttl = 10;
 
     this.$root.$$lastDirtyWatch = null;
@@ -74,14 +74,14 @@ Scope.prototype.$digest = function() {
     }
 };
 
-Scope.prototype.$$digestOnce = function() {
+Scope.prototype.$$digestOnce = function () {
     var self = this,
         continueLoop = true,
         dirty;
 
-    self.$$everyScope(function(scope) {
+    self.$$everyScope(function (scope) {
         var newValue, oldValue;
-        _.forEachRight(scope.$$watchers, function(watcher) {
+        _.forEachRight(scope.$$watchers, function (watcher) {
             try {
                 if (watcher) {
                     newValue = watcher.watchFn(scope);
@@ -108,7 +108,7 @@ Scope.prototype.$$digestOnce = function() {
     return dirty;
 };
 
-Scope.prototype.$$areEqual = function(newValue, oldValue, valueEq) {
+Scope.prototype.$$areEqual = function (newValue, oldValue, valueEq) {
     if (valueEq) {
         return _.isEqual(newValue, oldValue);
     } else {
@@ -116,11 +116,11 @@ Scope.prototype.$$areEqual = function(newValue, oldValue, valueEq) {
     }
 };
 
-Scope.prototype.$eval = function(expr, locals) {
+Scope.prototype.$eval = function (expr, locals) {
     return expr(this, locals);
 };
 
-Scope.prototype.$apply = function(expr) {
+Scope.prototype.$apply = function (expr) {
     try {
         this.$beginPhase('$apply');
         return this.$eval(expr);
@@ -131,42 +131,42 @@ Scope.prototype.$apply = function(expr) {
 };
 
 // $evalAsync takes a function and schedules it to run later but still during the ongoing digest
-Scope.prototype.$evalAsync = function(expr) {
+Scope.prototype.$evalAsync = function (expr) {
     var self = this;
     if (!self.$$phase && !self.$$asyncQueue.length) { // If there’s something in the queue, we already have a timeout set and it will eventually drain the queue.
-        setTimeout(function() {
+        setTimeout(function () {
             if (self.$$asyncQueue.length) {
                 self.$root.$digest();
             }
         }, 0);
     }
-    this.$$asyncQueue.push({ scope: this, expression: expr });
+    this.$$asyncQueue.push({scope : this, expression : expr});
 };
 
-Scope.prototype.$beginPhase = function(phase) {
+Scope.prototype.$beginPhase = function (phase) {
     if (this.$$phase) {
         throw this.$$phase + ' already in progress';
     }
     this.$$phase = phase;
 };
 
-Scope.prototype.$clearPhase = function() {
+Scope.prototype.$clearPhase = function () {
     this.$$phase = null;
 };
 
-Scope.prototype.$applyAsync = function(expr) {
+Scope.prototype.$applyAsync = function (expr) {
     var self = this;
-    self.$$applyAsyncQueue.push(function() {
+    self.$$applyAsyncQueue.push(function () {
         self.$eval(expr);
     });
     if (self.$root.$$applyAsyncId === null) {
-        self.$root.$$applyAsyncId = setTimeout(function() {
+        self.$root.$$applyAsyncId = setTimeout(function () {
             self.$apply(_.bind(self.$$flushApplyAsync, self));
         }, 0);
     }
 };
 
-Scope.prototype.$$flushApplyAsync = function() {
+Scope.prototype.$$flushApplyAsync = function () {
     while (this.$$applyAsyncQueue.length) {
         try {
             this.$$applyAsyncQueue.shift()();
@@ -177,11 +177,11 @@ Scope.prototype.$$flushApplyAsync = function() {
     this.$root.$$applyAsyncId = null;
 };
 
-Scope.prototype.$$postDigest = function(fn) {
+Scope.prototype.$$postDigest = function (fn) {
     this.$$postDigestQueue.push(fn);
 };
 
-Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
+Scope.prototype.$watchGroup = function (watchFns, listenerFn) {
     var self = this,
         oldValues = [],
         newValues = [],
@@ -190,12 +190,12 @@ Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
 
     if (watchFns.length === 0) {
         var shouldCall = true;
-        self.$evalAsync(function() {
+        self.$evalAsync(function () {
             if (shouldCall) {
                 listenerFn(newValues, oldValues, self);
             }
         });
-        return function() {
+        return function () {
             shouldCall = false;
         };
     }
@@ -210,10 +210,10 @@ Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
         changeReactionScheduled = false;
     }
 
-    var destroyFunctions = _.map(watchFns, function(watchFn, i) {
+    var destroyFunctions = _.map(watchFns, function (watchFn, i) {
         return self.$watch(
             watchFn,
-            function(newValue, oldValue, scope) {
+            function (newValue, oldValue, scope) {
                 newValues[i] = newValue;
                 oldValues[i] = oldValue;
 
@@ -225,20 +225,21 @@ Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
         );
     });
 
-    return function() {
-        _.each(destroyFunctions, function(destroyFunction) {
+    return function () {
+        _.each(destroyFunctions, function (destroyFunction) {
             destroyFunction();
         });
     };
 };
 
-Scope.prototype.$$new = function() {
-    var ChildScope = function() { };
+Scope.prototype.$$new = function () {
+    var ChildScope = function () {
+    };
     ChildScope.prototype = this;
     var child = new ChildScope();
     return child;
 };
-Scope.prototype.$new = function(isolate, parent) {
+Scope.prototype.$new = function (isolate, parent) {
     var childScope;
     parent = parent || this;
     if (isolate) {
@@ -258,9 +259,9 @@ Scope.prototype.$new = function(isolate, parent) {
     return childScope;
 };
 
-Scope.prototype.$$everyScope = function(fn) {
+Scope.prototype.$$everyScope = function (fn) {
     if (fn(this)) {
-        return this.$$children.every(function(child) {
+        return this.$$children.every(function (child) {
             return child.$$everyScope(fn);
         });
     } else {
@@ -268,7 +269,7 @@ Scope.prototype.$$everyScope = function(fn) {
     }
 };
 
-Scope.prototype.$destroy = function() {
+Scope.prototype.$destroy = function () {
     this.$broadcast('$destroy');
     if (this.$parent) {
         var siblings = this.$parent.$$children;
@@ -278,10 +279,10 @@ Scope.prototype.$destroy = function() {
         }
     }
     this.$$watchers = null;
-    this.$$listeners ={};
+    this.$$listeners = {};
 };
 
-Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
+Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
     var self = this;
     var newValue,
         oldValue,
@@ -291,7 +292,7 @@ Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
         changeCount = 0,
         firstRun = true;
 
-    var internalWatchFn = function(scope) {
+    var internalWatchFn = function (scope) {
         var newLength;
         newValue = watchFn(scope);
 
@@ -305,7 +306,7 @@ Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
                     oldValue.length = newValue.length;
                     changeCount++;
                 }
-                _.each(newValue, function(item, i) {
+                _.each(newValue, function (item, i) {
                     if (!self.$$areEqual(item, oldValue[i], false)) {
                         oldValue[i] = item;
                         changeCount++;
@@ -318,7 +319,7 @@ Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
                     oldLength = 0;
                 }
                 newLength = 0;
-                _.forOwn(newValue, function(newVal, key) {
+                _.forOwn(newValue, function (newVal, key) {
                     newLength++;
                     if (oldValue.hasOwnProperty(key)) {
                         if (!self.$$areEqual(oldValue[key], newVal, false)) {
@@ -333,7 +334,7 @@ Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
                 });
                 if (oldLength > newLength) {
                     changeCount++;
-                    _.forOwn(oldValue, function(newVal, key) {
+                    _.forOwn(oldValue, function (newVal, key) {
                         if (!newValue.hasOwnProperty(key)) {
                             oldLength--;
                             delete oldValue[key];
@@ -350,7 +351,7 @@ Scope.prototype.$watchCollection = function(watchFn, listenerFn) {
 
         return changeCount;
     };
-    var internalListenerFn = function() {
+    var internalListenerFn = function () {
         if (firstRun) {
             listenerFn(newValue, newValue, self);
             firstRun = false;
@@ -373,11 +374,11 @@ function isArrayLike(obj) {
     return length === 0 || (_.isNumber(length) && length > 0 && (length - 1) in obj);
 }
 
-Scope.prototype.$on = function(eventName, listener) {
+Scope.prototype.$on = function (eventName, listener) {
     var listeners = this.$$listeners[eventName] || (this.$$listeners[eventName] = []);
     listeners.push(listener);
 
-    return function() {
+    return function () {
         var index = listeners.indexOf(listener);
         if (index >= 0) {
             listeners[index] = null;
@@ -385,15 +386,15 @@ Scope.prototype.$on = function(eventName, listener) {
     };
 };
 
-Scope.prototype.$emit = function(eventName) {
+Scope.prototype.$emit = function (eventName) {
     var propagationStopped = false;
     var event = {
-        name: eventName,
-        targetScope: this,
-        stopPropagation: function() {
+        name : eventName,
+        targetScope : this,
+        stopPropagation : function () {
             propagationStopped = true;
         },
-        preventDefault: function() {
+        preventDefault : function () {
             event.defaultPrevented = true;
         }
     };
@@ -408,16 +409,16 @@ Scope.prototype.$emit = function(eventName) {
     return event;
 };
 
-Scope.prototype.$broadcast = function(eventName) {
+Scope.prototype.$broadcast = function (eventName) {
     var event = {
-        name: eventName,
-        targetScope: this,
-        preventDefault: function() {
+        name : eventName,
+        targetScope : this,
+        preventDefault : function () {
             event.defaultPrevented = true;
         }
     };
     var listenerArgs = [event].concat(_.tail(arguments));
-    this.$$everyScope(function(scope) {
+    this.$$everyScope(function (scope) {
         event.currentScope = scope;
         scope.$$fireEventOnScope(eventName, listenerArgs);
         return true;
@@ -426,7 +427,7 @@ Scope.prototype.$broadcast = function(eventName) {
     return event;
 };
 
-Scope.prototype.$$fireEventOnScope = function(eventName, listenerArgs) {
+Scope.prototype.$$fireEventOnScope = function (eventName, listenerArgs) {
     var listeners = this.$$listeners[eventName] || [];
     var i = 0;
     while (i < listeners.length) {

@@ -6,6 +6,14 @@ var ESCAPES = {
     'v': '\v', '\'': '\'', '"': '"'
 };
 
+function ensureSafeMemberName(name) {
+    if (name === 'constructor' || name === '__proto__' ||
+        name === '__defineGetter__' || name === '__defineSetter__' ||
+        name === '__lookupGetter__' || name === '__lookupSetter__') {
+        throw 'Attempting to access a disallowed field in Angular expressions!';
+    }
+}
+
 function Lexer() {
 }
 
@@ -16,8 +24,8 @@ Lexer.prototype.lex = function (text) {
     this.tokens = [];
     while (this.index < this.text.length) {
         this.ch = this.text.charAt(this.index);
-        if (this.isNumber(this.ch)
-            || (this.is('.') && this.isNumber(this.peek()))) {
+        if (this.isNumber(this.ch) ||
+            (this.is('.') && this.isNumber(this.peek()))) {
             this.readNumber();
         } else if (this.is('\'"')) {
             this.readString(this.ch);
@@ -49,12 +57,12 @@ Lexer.prototype.isExpOperator = function (ch) {
     return ch === '-' || ch === '+' || this.isNumber(ch);
 };
 Lexer.prototype.isIdent = function (ch) {
-    return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
-        || ch === '_' || ch === '$';
+    return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+        ch === '_' || ch === '$';
 };
 Lexer.prototype.isWhitespace = function (ch) {
-    return ch === ' ' || ch === '\r' || ch === '\t'
-        || ch === '\n' || ch === '\v' || ch === '\u00A0';
+    return ch === ' ' || ch === '\r' || ch === '\t' ||
+        ch === '\n' || ch === '\v' || ch === '\u00A0';
 };
 
 Lexer.prototype.readNumber = function () {
@@ -165,11 +173,11 @@ AST.CallExpression = 'CallExpression';
 AST.AssignmentExpression = 'AssignmentExpression';
 
 AST.prototype.constants = {
-    'null': { type: AST.Literal, value: null },
-    'true': { type: AST.Literal, value: true },
-    'false': { type: AST.Literal, value: false },
-    'this': { type: AST.ThisExpression },
-    '$locals': { type: AST.LocalsExpression }
+    'null': {type: AST.Literal, value: null},
+    'true': {type: AST.Literal, value: true},
+    'false': {type: AST.Literal, value: false},
+    'this': {type: AST.ThisExpression},
+    '$locals': {type: AST.LocalsExpression}
 };
 
 AST.prototype.ast = function (text) {
@@ -179,13 +187,13 @@ AST.prototype.ast = function (text) {
     return this.program();
 };
 AST.prototype.program = function () {
-    return { type: AST.Program, body: this.assignment() };
+    return {type: AST.Program, body: this.assignment()};
 };
 AST.prototype.assignment = function () {
     var left = this.primary();
     if (this.expect('=')) {
         var right = this.primary();
-        return { type: AST.AssignmentExpression, left: left, right: right };
+        return {type: AST.AssignmentExpression, left: left, right: right};
     }
     return left;
 };
@@ -244,13 +252,13 @@ AST.prototype.arrayDeclaration = function () {
         } while (this.expect(','));
     }
     this.consume(']');
-    return { type: AST.ArrayExpression, elements: elements };
+    return {type: AST.ArrayExpression, elements: elements};
 };
 AST.prototype.object = function () {
     var properties = [];
     if (!this.peek('}')) {
         do {
-            var property = { type: AST.Property };
+            var property = {type: AST.Property};
             if (this.peek().identifier) {
                 property.key = this.identifier();
             } else {
@@ -262,15 +270,15 @@ AST.prototype.object = function () {
         } while (this.expect(','));
     }
     this.consume('}');
-    return { type: AST.ObjectExpression, properties: properties };
+    return {type: AST.ObjectExpression, properties: properties};
 };
 AST.prototype.identifier = function () {
-    return { type: AST.Identifier, name: this.consume().text };
+    return {type: AST.Identifier, name: this.consume().text};
 };
 AST.prototype.constant = function () {
     // this line will fix failed test case "will not parse invalid scientific notation"
     if (this.peek().value === undefined) throw 'Invalid constant: ' + this.peek().text;
-    return { type: AST.Literal, value: this.consume().value };
+    return {type: AST.Literal, value: this.consume().value};
 };
 
 AST.prototype.expect = function (e1, e2, e3, e4) {
@@ -313,119 +321,124 @@ ASTCompiler.prototype.compile = function (text) {
     var ast = this.astBuilder.ast(text);
     // console.debug('ast ', JSON.stringify(ast));
     // AST compilation will be done here
-    this.state = { body: [], nextId: 0, vars: [] };
+    this.state = {body: [], nextId: 0, vars: []};
     this.recurse(ast);
-    /* jshint -W054 */
-    return new Function('s', 'l',
+    var fnString = 'var fn=function(s,l){' +
         (this.state.vars.length > 0 ?
             'var ' + this.state.vars.join(',') + ';' :
             ''
-        ) + this.state.body.join(''));
+        ) + this.state.body.join('') +
+        '}; return fn;';
+    /* jshint -W054 */
+    return new Function('ensureSafeMemberName' ,fnString)(ensureSafeMemberName);
     /* jshint +W054 */
 };
 ASTCompiler.prototype.recurse = function (ast, context, create) {
     var intoId;
     switch (ast.type) {
-        case AST.Program:
-            this.state.body.push('return ', this.recurse(ast.body), ';');
-            break;
-        case AST.Literal:
-            return this.escape(ast.value);
-        case AST.ArrayExpression:
-            var elements = _.map(ast.elements, _.bind(function (element) {
-                return this.recurse(element);
-            }, this));
-            return '[' + elements.join(',') + ']';
-        case AST.ObjectExpression:
-            var properties = _.map(ast.properties, _.bind(function (property) {
-                var key = property.key.type === AST.Identifier ?
-                    property.key.name :
-                    this.escape(property.key.value);
-                var value = this.recurse(property.value);
-                return key + ':' + value;
-            }, this));
-            return '{' + properties.join(',') + '}';
-        case AST.Identifier:
-            intoId = this.nextId();
-            // get ast.name from locals and set to the variable
-            this.if_('l',
-                this.assign(intoId, this.nonComputedMember('l', ast.name)));
-            // set empty object to undefind property on scope
-            if (create) {
-                this.if_(this.not(this.getHasOwnProperty('l', ast.name))
-                    + ' && s && '
-                    + this.not(this.getHasOwnProperty('s', ast.name)),
-                    this.assign(this.nonComputedMember('s', ast.name), '{}'));
+    case AST.Program:
+        this.state.body.push('return ', this.recurse(ast.body), ';');
+        break;
+    case AST.Literal:
+        return this.escape(ast.value);
+    case AST.ArrayExpression:
+        var elements = _.map(ast.elements, _.bind(function (element) {
+            return this.recurse(element);
+        }, this));
+        return '[' + elements.join(',') + ']';
+    case AST.ObjectExpression:
+        var properties = _.map(ast.properties, _.bind(function (property) {
+            var key = property.key.type === AST.Identifier ?
+                property.key.name :
+                this.escape(property.key.value);
+            var value = this.recurse(property.value);
+            return key + ':' + value;
+        }, this));
+        return '{' + properties.join(',') + '}';
+    case AST.Identifier:
+        ensureSafeMemberName(ast.name);
+        intoId = this.nextId();
+        // get ast.name from locals and set to the variable
+        this.if_('l',
+            this.assign(intoId, this.nonComputedMember('l', ast.name)));
+        // set empty object to undefind property on scope
+        if (create) {
+            this.if_(this.not(this.getHasOwnProperty('l', ast.name)) +
+                    ' && s && ' +
+                    this.not(this.getHasOwnProperty('s', ast.name)),
+            this.assign(this.nonComputedMember('s', ast.name), '{}'));
+        }
+        // get ast.name from scope
+        this.if_(this.not(this.getHasOwnProperty('l', ast.name)) + '&& s',
+            this.assign(intoId, this.nonComputedMember('s', ast.name)));
+        if (context) {
+            context.context = this.getHasOwnProperty('l', ast.name) + '?l:s';
+            context.name = ast.name;
+            context.computed = false;
+        }
+        return intoId;
+    case AST.ThisExpression:
+        return 's';
+    case AST.LocalsExpression:
+        return 'l';
+    case AST.MemberExpression:
+        intoId = this.nextId();
+        // recurse set up left hand side
+        var left = this.recurse(ast.object, undefined, create);
+        if (context) {
+            context.context = left;
+        }
+        if (ast.computed) {
+            var right = this.recurse(ast.property);
+            this.addEnsureSafeMemberName(right);
+            if (create) { // set empty object to undefind property
+                this.if_(this.not(this.computedMember(left, right)),
+                    this.assign(this.computedMember(left, right), '{}'));
             }
-            // get ast.name from scope
-            this.if_(this.not(this.getHasOwnProperty('l', ast.name)) + '&& s',
-                this.assign(intoId, this.nonComputedMember('s', ast.name)));
+            this.if_(left,
+                this.assign(intoId, this.computedMember(left, right)));
             if (context) {
-                context.context = this.getHasOwnProperty('l', ast.name) + '?l:s';
-                context.name = ast.name;
+                context.name = right;
+                context.computed = true;
+            }
+        } else {
+            ensureSafeMemberName(ast.property.name);
+            if (create) {
+                this.if_(this.not(this.nonComputedMember(left, ast.property.name)),
+                    this.assign(this.nonComputedMember(left, ast.property.name), '{}'));
+            }
+            this.if_(left,
+                this.assign(intoId, this.nonComputedMember(left, ast.property.name)));
+            if (context) {
+                context.name = ast.property.name;
                 context.computed = false;
             }
-            return intoId;
-        case AST.ThisExpression:
-            return 's';
-        case AST.LocalsExpression:
-            return 'l';
-        case AST.MemberExpression:
-            intoId = this.nextId();
-            // recurse set up left hand side
-            var left = this.recurse(ast.object, undefined, create);
-            if (context) {
-                context.context = left;
-            }
-            if (ast.computed) {
-                var right = this.recurse(ast.property);
-                if (create) { // set empty object to undefind property
-                    this.if_(this.not(this.computedMember(left, right)),
-                        this.assign(this.computedMember(left, right), '{}'));
-                }
-                this.if_(left,
-                    this.assign(intoId, this.computedMember(left, right)));
-                if (context) {
-                    context.name = right;
-                    context.computed = true;
-                }
+        }
+        return intoId;
+    case AST.CallExpression:
+        var callContext = {};
+        var callee = this.recurse(ast.callee, callContext);
+        var args = _.map(ast.arguments, _.bind(function (argument) {
+            return this.recurse(argument);
+        }, this));
+        if (callContext.name) {
+            if (callContext.computed) {
+                callee = this.computedMember(callContext.context, callContext.name);
             } else {
-                if (create) {
-                    this.if_(this.not(this.nonComputedMember(left, ast.property.name)),
-                        this.assign(this.nonComputedMember(left, ast.property.name), '{}'));
-                }
-                this.if_(left,
-                    this.assign(intoId, this.nonComputedMember(left, ast.property.name)));
-                if (context) {
-                    context.name = ast.property.name;
-                    context.computed = false;
-                }
+                callee = this.nonComputedMember(callContext.context, callContext.name);
             }
-            return intoId;
-        case AST.CallExpression:
-            var callContext = {};
-            var callee = this.recurse(ast.callee, callContext);
-            var args = _.map(ast.arguments, _.bind(function (argument) {
-                return this.recurse(argument);
-            }, this));
-            if (callContext.name) {
-                if (callContext.computed) {
-                    callee = this.computedMember(callContext.context, callContext.name);
-                } else {
-                    callee = this.nonComputedMember(callContext.context, callContext.name);
-                }
-            }
-            return callee + '&&' + callee + '(' + args.join(',') + ')';
-        case AST.AssignmentExpression:
-            var leftContext = {};
-            this.recurse(ast.left, leftContext, true);// recursing create any missing object on the left side
-            var leftExpr;
-            if (leftContext.computed) {
-                leftExpr = this.computedMember(leftContext.context, leftContext.name);
-            } else {
-                leftExpr = this.nonComputedMember(leftContext.context, leftContext.name);
-            }
-            return this.assign(leftExpr, this.recurse(ast.right));
+        }
+        return callee + '&&' + callee + '(' + args.join(',') + ')';
+    case AST.AssignmentExpression:
+        var leftContext = {};
+        this.recurse(ast.left, leftContext, true);// recursing create any missing object on the left side
+        var leftExpr;
+        if (leftContext.computed) {
+            leftExpr = this.computedMember(leftContext.context, leftContext.name);
+        } else {
+            leftExpr = this.nonComputedMember(leftContext.context, leftContext.name);
+        }
+        return this.assign(leftExpr, this.recurse(ast.right));
     }
 };
 
@@ -459,13 +472,16 @@ ASTCompiler.prototype.stringEscapeFn = function (c) {
 };
 ASTCompiler.prototype.escape = function (value) {
     if (_.isString(value)) {
-        return '\''
-            + value.replace(this.stringEscapeRegex, this.stringEscapeFn) + '\'';
+        return '\'' +
+            value.replace(this.stringEscapeRegex, this.stringEscapeFn) + '\'';
     } else if (_.isNull(value)) {
         return 'null';
     } else {
         return value;
     }
+};
+ASTCompiler.prototype.addEnsureSafeMemberName = function(expr) {
+    this.state.body.push('ensureSafeMemberName(' + expr + ');');
 };
 
 

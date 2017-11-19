@@ -51,3 +51,15 @@ function (s) {
     }
 }
 ```
+
+### why constructor is unsafe
+`someFn.constructor('return window')` is equivalent to 
+`new Function('return window')();` 
+
+### compile error vs runtime error
+case AST.Identifier:
+        ensureSafeMemberName(ast.name);
+        
+        VS.
+        
+this.addEnsureSafeObject(intoId);

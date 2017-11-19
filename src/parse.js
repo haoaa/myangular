@@ -8,7 +8,10 @@ var ESCAPES = {
 var OPERATORS = {
     '+': true,
     '!': true,
-    '-': true
+    '-': true,
+    '*': true,
+    '/': true,
+    '%': true
 };
 
 var CALL = Function.prototype.call;
@@ -218,6 +221,7 @@ AST.MemberExpression = 'MemberExpression';
 AST.CallExpression = 'CallExpression';
 AST.AssignmentExpression = 'AssignmentExpression';
 AST.UnaryExpression = 'UnaryExpression';
+AST.BinaryExpression = 'BinaryExpression';
 
 AST.prototype.constants = {
     'null': {type: AST.Literal, value: null},
@@ -237,9 +241,9 @@ AST.prototype.program = function () {
     return {type: AST.Program, body: this.assignment()};
 };
 AST.prototype.assignment = function () {
-    var left = this.unary();
+    var left = this.additive();
     if (this.expect('=')) {
-        var right = this.unary();
+        var right = this.additive();
         return {type: AST.AssignmentExpression, left: left, right: right};
     }
     return left;
@@ -298,6 +302,32 @@ AST.prototype.unary = function() {
     } else {
         return this.primary();
     }
+};
+AST.prototype.multiplicative = function () {
+    var left = this.unary();
+    var token;
+    while ((token =this.expect('*', '/', '%'))){
+        left={
+            type: AST.BinaryExpression,
+            left : left,
+            operator: token.text,
+            right: this.unary()
+        };
+    }
+    return left;
+};
+AST.prototype.additive = function () {
+    var left = this.multiplicative();
+    var token;
+    while ((token =this.expect('-', '+'))){
+        left={
+            type: AST.BinaryExpression,
+            left : left,
+            operator: token.text,
+            right: this.multiplicative()
+        };
+    }
+    return left;
 };
 AST.prototype.arrayDeclaration = function () {
     var elements = [];
@@ -516,6 +546,16 @@ ASTCompiler.prototype.recurse = function (ast, context, create) {
     case AST.UnaryExpression:
         return ast.operator +
          '(' + this.ifDefined(this.recurse(ast.argument), 0) + ')';
+    case AST.BinaryExpression:
+        if (ast.operator === '+' || ast.operator === '-') {
+            return '(' + this.ifDefined(this.recurse(ast.left), 0) + ')' +
+                ast.operator +
+                '(' + this.ifDefined(this.recurse(ast.right), 0) + ')';
+        } else {
+            return '(' + this.recurse(ast.left) + ')' +
+                ast.operator +
+                '(' + this.recurse(ast.right) + ')';
+        }
     }
 };
 

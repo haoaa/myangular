@@ -503,13 +503,17 @@ AST.prototype.parseArguments = function () {
 };
 AST.prototype.filter = function () {
     var left = this.assignment();
-    if (this.expect('|')){
+    while (this.expect('|')){
+        var args = [left];
         left = {
             type : AST.CallExpression,
             callee : this.identifier(),
-            arguments: [left],
+            arguments: args,
             filter: true
         };
+        while (this.expect(':')){
+            args.push(this.assignment());
+        }
     }
     return left;
 };

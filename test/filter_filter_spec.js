@@ -92,4 +92,8 @@ describe('filter filter', function () {
         var fn = parse('arr | filter:"undefined"');
         expect(fn({ arr: [undefined, 'undefined'] })).toEqual(['undefined']);
     });
+    it('allows negating string filter', function () {
+        var fn = parse('arr | filter:"!o"');
+        expect(fn({ arr: ['quick', 'brown', 'fox'] })).toEqual(['quick']);
+    });
 });

@@ -30,7 +30,7 @@ var CALL = Function.prototype.call;
 var APPLY = Function.prototype.apply;
 var BIND = Function.prototype.bind;
 
-function ifDefined(value, defaultValue){
+function ifDefined(value, defaultValue) {
     return typeof value === 'undefined' ? defaultValue : value;
 }
 
@@ -42,11 +42,11 @@ function ensureSafeMemberName(name) {
     }
 }
 function ensureSafeObject(obj) {
-    if (obj){
-        if (obj.window === obj ){
+    if (obj) {
+        if (obj.window === obj) {
             throw 'Referencing window in Angular expressions is disallowed!';
-        }else if(obj.children &&
-            (obj.nodeName || (obj.prop && obj.attr && obj.find))){
+        } else if (obj.children &&
+            (obj.nodeName || (obj.prop && obj.attr && obj.find))) {
             throw 'Referencing DOM nodes in Angular expressions is disallowed!';
         } else if (obj.constructor === obj) {
             throw 'Referencing Function in Angular expressions is disallowed!';
@@ -61,14 +61,14 @@ function ensureSafeFunction(obj) {
         if (obj.constructor === obj) {
             throw 'Referencing Function in Angular expressions is disallowed!';
         } else if (obj === CALL || obj === APPLY || obj === BIND) {
-            throw 'Referencing call, apply, or bind in Angular expressions '+
+            throw 'Referencing call, apply, or bind in Angular expressions ' +
             'is disallowed!';
         }
     }
     return obj;
 }
 
-function Lexer() {}
+function Lexer() { }
 
 Lexer.prototype.lex = function (text) {
     this.text = text;
@@ -101,7 +101,7 @@ Lexer.prototype.lex = function (text) {
             var op3 = OPERATORS[ch3];
             if (op || op2 || op3) {
                 var token = op3 ? ch3 : (op2 ? ch2 : ch);
-                this.tokens.push({text: token});
+                this.tokens.push({ text: token });
                 this.index += token.length;
             } else {
                 throw 'Unexpected next character: ' + this.ch;
@@ -245,11 +245,11 @@ AST.LogicalExpression = 'LogicalExpression';
 AST.ConditionalExpression = 'ConditionalExpression';
 
 AST.prototype.constants = {
-    'null': {type: AST.Literal, value: null},
-    'true': {type: AST.Literal, value: true},
-    'false': {type: AST.Literal, value: false},
-    'this': {type: AST.ThisExpression},
-    '$locals': {type: AST.LocalsExpression}
+    'null': { type: AST.Literal, value: null },
+    'true': { type: AST.Literal, value: true },
+    'false': { type: AST.Literal, value: false },
+    'this': { type: AST.ThisExpression },
+    '$locals': { type: AST.LocalsExpression }
 };
 
 AST.prototype.ast = function (text) {
@@ -260,12 +260,12 @@ AST.prototype.ast = function (text) {
 };
 AST.prototype.program = function () {
     var body = [];
-    while(true){
-        if (this.tokens.length){
+    while (true) {
+        if (this.tokens.length) {
             body.push(this.filter());
         }
-        if (!this.expect(';')){
-            return {type: AST.Program, body: body};
+        if (!this.expect(';')) {
+            return { type: AST.Program, body: body };
         }
     }
 };
@@ -273,14 +273,14 @@ AST.prototype.assignment = function () {
     var left = this.ternary();
     if (this.expect('=')) {
         var right = this.ternary();
-        return {type: AST.AssignmentExpression, left: left, right: right};
+        return { type: AST.AssignmentExpression, left: left, right: right };
     }
     return left;
 };
 
 AST.prototype.primary = function () {
     var primary;
-    if (this.expect('(')){
+    if (this.expect('(')) {
         primary = this.filter();
         this.consume(')');
     } else if (this.expect('[')) {
@@ -323,9 +323,9 @@ AST.prototype.primary = function () {
 
     return primary;
 };
-AST.prototype.unary = function() {
+AST.prototype.unary = function () {
     var token;
-    if ( (token = this.expect('+', '!', '-'))) {
+    if ((token = this.expect('+', '!', '-'))) {
         return {
             type: AST.UnaryExpression,
             operator: token.text,
@@ -338,10 +338,10 @@ AST.prototype.unary = function() {
 AST.prototype.multiplicative = function () {
     var left = this.unary();
     var token;
-    while ((token =this.expect('*', '/', '%'))){
-        left={
+    while ((token = this.expect('*', '/', '%'))) {
+        left = {
             type: AST.BinaryExpression,
-            left : left,
+            left: left,
             operator: token.text,
             right: this.unary()
         };
@@ -351,10 +351,10 @@ AST.prototype.multiplicative = function () {
 AST.prototype.additive = function () {
     var left = this.multiplicative();
     var token;
-    while ((token =this.expect('-', '+'))){
-        left={
+    while ((token = this.expect('-', '+'))) {
+        left = {
             type: AST.BinaryExpression,
-            left : left,
+            left: left,
             operator: token.text,
             right: this.multiplicative()
         };
@@ -364,10 +364,10 @@ AST.prototype.additive = function () {
 AST.prototype.equality = function () {
     var left = this.relational();
     var token;
-    while ((token =this.expect('==', '!=', '===', '!=='))){
-        left={
+    while ((token = this.expect('==', '!=', '===', '!=='))) {
+        left = {
             type: AST.BinaryExpression,
-            left : left,
+            left: left,
             operator: token.text,
             right: this.relational()
         };
@@ -378,10 +378,10 @@ AST.prototype.equality = function () {
 AST.prototype.relational = function () {
     var left = this.additive();
     var token;
-    while ((token =this.expect('<', '>', '<=', '>='))){
-        left={
+    while ((token = this.expect('<', '>', '<=', '>='))) {
+        left = {
             type: AST.BinaryExpression,
-            left : left,
+            left: left,
             operator: token.text,
             right: this.additive()
         };
@@ -391,10 +391,10 @@ AST.prototype.relational = function () {
 AST.prototype.logicalOR = function () {
     var left = this.logicalAND();
     var token;
-    while ((token =this.expect('||'))){
-        left={
+    while ((token = this.expect('||'))) {
+        left = {
             type: AST.BinaryExpression,
-            left : left,
+            left: left,
             operator: token.text,
             right: this.logicalAND()
         };
@@ -420,10 +420,10 @@ AST.prototype.ternary = function () {
 AST.prototype.logicalAND = function () {
     var left = this.equality();
     var token;
-    while ((token =this.expect('&&'))){
-        left={
+    while ((token = this.expect('&&'))) {
+        left = {
             type: AST.BinaryExpression,
-            left : left,
+            left: left,
             operator: token.text,
             right: this.equality()
         };
@@ -442,13 +442,13 @@ AST.prototype.arrayDeclaration = function () {
         } while (this.expect(','));
     }
     this.consume(']');
-    return {type: AST.ArrayExpression, elements: elements};
+    return { type: AST.ArrayExpression, elements: elements };
 };
 AST.prototype.object = function () {
     var properties = [];
     if (!this.peek('}')) {
         do {
-            var property = {type: AST.Property};
+            var property = { type: AST.Property };
             if (this.peek().identifier) {
                 property.key = this.identifier();
             } else {
@@ -460,15 +460,15 @@ AST.prototype.object = function () {
         } while (this.expect(','));
     }
     this.consume('}');
-    return {type: AST.ObjectExpression, properties: properties};
+    return { type: AST.ObjectExpression, properties: properties };
 };
 AST.prototype.identifier = function () {
-    return {type: AST.Identifier, name: this.consume().text};
+    return { type: AST.Identifier, name: this.consume().text };
 };
 AST.prototype.constant = function () {
     // this line will fix failed test case "will not parse invalid scientific notation"
     if (this.peek().value === undefined) throw 'Invalid constant: ' + this.peek().text;
-    return {type: AST.Literal, value: this.consume().value};
+    return { type: AST.Literal, value: this.consume().value };
 };
 
 AST.prototype.expect = function (e1, e2, e3, e4) {
@@ -503,15 +503,15 @@ AST.prototype.parseArguments = function () {
 };
 AST.prototype.filter = function () {
     var left = this.assignment();
-    while (this.expect('|')){
+    while (this.expect('|')) {
         var args = [left];
         left = {
-            type : AST.CallExpression,
-            callee : this.identifier(),
+            type: AST.CallExpression,
+            callee: this.identifier(),
             arguments: args,
             filter: true
         };
-        while (this.expect(':')){
+        while (this.expect(':')) {
             args.push(this.assignment());
         }
     }
@@ -526,7 +526,7 @@ ASTCompiler.prototype.compile = function (text) {
     var ast = this.astBuilder.ast(text);
     // console.debug('ast ', JSON.stringify(ast));
     // AST compilation will be done here
-    this.state = {body: [], nextId: 0, vars: [], filters: {}};
+    this.state = { body: [], nextId: 0, vars: [], filters: {} };
     this.recurse(ast);
     var fnString = this.filterPrefix() +
         'var fn=function(s,l){' +
@@ -562,12 +562,12 @@ ASTCompiler.prototype.recurse = function (ast, context, create) {
     case AST.Literal:
         return this.escape(ast.value);
     case AST.ArrayExpression:
-        var elements = _.map(ast.elements, _.bind(function(element) {
+        var elements = _.map(ast.elements, _.bind(function (element) {
             return this.recurse(element);
         }, this));
         return '[' + elements.join(',') + ']';
     case AST.ObjectExpression:
-        var properties = _.map(ast.properties, _.bind(function(property) {
+        var properties = _.map(ast.properties, _.bind(function (property) {
             var key = property.key.type === AST.Identifier ?
                 property.key.name :
                 this.escape(property.key.value);
@@ -636,7 +636,7 @@ ASTCompiler.prototype.recurse = function (ast, context, create) {
             this.if_(left,
                 this.assign(intoId,
                     'ensureSafeObject(' +
-                    this.nonComputedMember(left, ast.property.name) + ')'));
+                        this.nonComputedMember(left, ast.property.name) + ')'));
             if (context) {
                 context.name = ast.property.name;
                 context.computed = false;
@@ -645,16 +645,16 @@ ASTCompiler.prototype.recurse = function (ast, context, create) {
         return intoId;
     case AST.CallExpression:
         var callContext, callee, args;
-        if (ast.filter){
+        if (ast.filter) {
             callee = this.filter(ast.callee.name);
-            args = _.map(ast.arguments, _.bind(function(argument) {
+            args = _.map(ast.arguments, _.bind(function (argument) {
                 return 'ensureSafeObject(' + this.recurse(argument) + ')';
             }, this));
             return callee + '(' + args.join(',') + ')';
-        }else {
+        } else {
             callContext = {};
             callee = this.recurse(ast.callee, callContext);
-            args = _.map(ast.arguments, _.bind(function(argument) {
+            args = _.map(ast.arguments, _.bind(function (argument) {
                 return 'ensureSafeObject(' + this.recurse(argument) + ')';
             }, this));
             if (callContext.name) {
@@ -669,7 +669,7 @@ ASTCompiler.prototype.recurse = function (ast, context, create) {
             }
             this.addEnsureSafeFunction(callee);
             return callee + '&& ensureSafeObject(' + callee + '(' +
-                args.join(',') + '))';
+                    args.join(',') + '))';
         }
     case AST.AssignmentExpression:
         var leftContext = {};
@@ -716,7 +716,7 @@ ASTCompiler.prototype.recurse = function (ast, context, create) {
 };
 ASTCompiler.prototype.nextId = function (skip) {
     var id = 'v' + (this.state.nextId++);
-    if (!skip){
+    if (!skip) {
         this.state.vars.push(id);
     }
     return id;
@@ -754,29 +754,29 @@ ASTCompiler.prototype.escape = function (value) {
         return value;
     }
 };
-ASTCompiler.prototype.addEnsureSafeMemberName = function(expr) {
+ASTCompiler.prototype.addEnsureSafeMemberName = function (expr) {
     this.state.body.push('ensureSafeMemberName(' + expr + ');');
 };
-ASTCompiler.prototype.addEnsureSafeObject = function(expr) {
+ASTCompiler.prototype.addEnsureSafeObject = function (expr) {
     this.state.body.push('ensureSafeObject(' + expr + ');');
 };
-ASTCompiler.prototype.addEnsureSafeFunction = function(expr) {
+ASTCompiler.prototype.addEnsureSafeFunction = function (expr) {
     this.state.body.push('ensureSafeFunction(' + expr + ');');
 };
-ASTCompiler.prototype.ifDefined =function(value, defaultValue){
+ASTCompiler.prototype.ifDefined = function (value, defaultValue) {
     return 'ifDefined(' + value + ',' + this.escape(defaultValue) + ')';
 };
-ASTCompiler.prototype.filter =function(name){
-    if (!this.state.filters.hasOwnProperty(name)){
+ASTCompiler.prototype.filter = function (name) {
+    if (!this.state.filters.hasOwnProperty(name)) {
         this.state.filters[name] = this.nextId(true);
     }
     return this.state.filters[name];
 };
-ASTCompiler.prototype.filterPrefix =function() {
-    if (_.isEmpty(this.state.filters)){
+ASTCompiler.prototype.filterPrefix = function () {
+    if (_.isEmpty(this.state.filters)) {
         return '';
-    }else {
-        var parts = _.map(this.state.filters, _.bind( function(varName, filterName) {
+    } else {
+        var parts = _.map(this.state.filters, _.bind(function (varName, filterName) {
             return varName + '=' + 'filter(' + this.escape(filterName) + ')';
         }, this));
 
@@ -795,9 +795,17 @@ Parser.prototype.parse = function (text) {
 
 
 function parse(expr) {
-    var lexer = new Lexer();
-    var parser = new Parser(lexer);
-    return parser.parse(expr);
+    switch (typeof expr) {
+    case 'string':
+        var lexer = new Lexer();
+        var parser = new Parser(lexer);
+        return parser.parse(expr);
+    case 'function':
+        return expr;
+    default:
+        return _.noop;
+    }
+
 }
 
 module.exports = parse;

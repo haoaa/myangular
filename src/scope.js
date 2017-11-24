@@ -1,8 +1,9 @@
 "use strict";
 
 var _ = require('lodash');
+var parse = require('./parse');
 
-function initWatchVal() {}
+function initWatchVal() { }
 
 function Scope(params) {
     this.$$watchers = [];
@@ -17,18 +18,18 @@ function Scope(params) {
     this.$$phase = null;
 }
 
-Scope.prototype.$watch = function(watchFn, listenerFn, valueEq) {
+Scope.prototype.$watch = function (watchFn, listenerFn, valueEq) {
     var self = this;
     var watcher = {
-        watchFn: watchFn,
-        listenerFn: listenerFn || function() { },
+        watchFn: parse(watchFn),
+        listenerFn: listenerFn || function () { },
         valueEq: !!valueEq,
         last: initWatchVal
     };
     this.$$watchers.unshift(watcher);
     this.$root.$$lastDirtyWatch = null;
 
-    return function() {
+    return function () {
         var index = self.$$watchers.indexOf(watcher);
         if (~index) {
             self.$$watchers.splice(index, 1);
@@ -117,7 +118,7 @@ Scope.prototype.$$areEqual = function (newValue, oldValue, valueEq) {
 };
 
 Scope.prototype.$eval = function (expr, locals) {
-    return expr(this, locals);
+    return parse(expr)(this, locals);
 };
 
 Scope.prototype.$apply = function (expr) {
@@ -140,7 +141,7 @@ Scope.prototype.$evalAsync = function (expr) {
             }
         }, 0);
     }
-    this.$$asyncQueue.push({scope : this, expression : expr});
+    this.$$asyncQueue.push({ scope: this, expression: expr});
 };
 
 Scope.prototype.$beginPhase = function (phase) {
@@ -292,6 +293,8 @@ Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
         changeCount = 0,
         firstRun = true;
 
+    watchFn = parse(watchFn);
+
     var internalWatchFn = function (scope) {
         var newLength;
         newValue = watchFn(scope);
@@ -389,12 +392,12 @@ Scope.prototype.$on = function (eventName, listener) {
 Scope.prototype.$emit = function (eventName) {
     var propagationStopped = false;
     var event = {
-        name : eventName,
-        targetScope : this,
-        stopPropagation : function () {
+        name: eventName,
+        targetScope: this,
+        stopPropagation: function () {
             propagationStopped = true;
         },
-        preventDefault : function () {
+        preventDefault: function () {
             event.defaultPrevented = true;
         }
     };
@@ -411,9 +414,9 @@ Scope.prototype.$emit = function (eventName) {
 
 Scope.prototype.$broadcast = function (eventName) {
     var event = {
-        name : eventName,
-        targetScope : this,
-        preventDefault : function () {
+        name: eventName,
+        targetScope: this,
+        preventDefault: function () {
             event.defaultPrevented = true;
         }
     };

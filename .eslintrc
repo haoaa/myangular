@@ -21,7 +21,20 @@
         "semi":2,
         "comma-style": ["error", "last"],
         "comma-spacing" : "error",
-        "comma-dangle": 2
+        "comma-dangle": 2,
+
+        //space style reference to  https://eslint.org/docs/rules/#stylistic-issues
+        "spaced-comment" : ["error", "always", { "exceptions": ["-", "+"] }],
+        "switch-colon-spacing": ["error", {"after": true, "before": false}],
+        "space-unary-ops": [2, {"words": true, "nonwords": false}],
+        "space-infix-ops": ["error", {"int32Hint": true}],
+        "space-in-parens": ["error", "never"],
+        "space-before-function-paren": ["error", {
+            "anonymous": "always",
+            "named": "never",
+            "asyncArrow": "always"
+        }],
+        "space-before-blocks": ["error", { "functions": "always", "keywords": "always", "classes": "never" }]
     },
     "globals": {
 

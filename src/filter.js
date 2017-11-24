@@ -5,7 +5,7 @@ var _ = require('lodash');
 var filters = {};
 
 function register(name, factory) {
-    if (_.isObject(name)){
+    if (_.isObject(name)) {
         return _.map(name, function (factory, name) {
             return register(name, factory);
         });

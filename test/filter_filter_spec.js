@@ -196,7 +196,7 @@ describe('filter filter', function () {
             { user: { name: 'Bob' } }
         ]);
     });
-    it('filters with a wildcard property', function() {
+    it('filters with a wildcard property', function () {
         var fn = parse('arr | filter:{$: "o"}');
         expect(fn({arr: [
             {name: 'Joe', role: 'admin'},
@@ -207,7 +207,7 @@ describe('filter filter', function () {
             {name: 'Jane', role: 'moderator'}
         ]);
     });
-    it('filters nested objects with a wildcard property', function() {
+    it('filters nested objects with a wildcard property', function () {
         var fn = parse('arr | filter:{$: "o"}');
         expect(fn({arr: [
             {name: {first: 'Joe'}, role: 'admin'},
@@ -218,7 +218,7 @@ describe('filter filter', function () {
             {name: {first: 'Jane'}, role: 'moderator'}
         ]);
     });
-    it('filters wildcard properties scoped to parent', function() {
+    it('filters wildcard properties scoped to parent', function () {
         var fn = parse('arr | filter:{name: {$: "o"}}');
         expect(fn({arr: [
             {name: {first: 'Joe', last: 'Fox'}, role: 'admin'},
@@ -229,11 +229,11 @@ describe('filter filter', function () {
             {name: {first: 'Mary', last: 'Brown'}, role: 'admin'}
         ]);
     });
-    it('filters primitives with a wildcard property', function() {
+    it('filters primitives with a wildcard property', function () {
         var fn = parse('arr | filter:{$: "o"}');
         expect(fn({arr: ['Joe', 'Jane', 'Mary']})).toEqual(['Joe']);
     });
-    it('filters with a nested wildcard property', function() {
+    it('filters with a nested wildcard property', function () {
         var fn = parse('arr | filter:{$: {$: "o"}}');
         expect(fn({arr: [
             {name: {first: 'Joe'}, role: 'admin'},
@@ -243,16 +243,16 @@ describe('filter filter', function () {
             {name: {first: 'Joe'}, role: 'admin'}
         ]);
     });
-    it('allows using a custom comparator', function() {
+    it('allows using a custom comparator', function () {
         var fn = parse('arr | filter:{$: "o"}:myComparator');
         expect(fn({
             arr: ['o', 'oo', 'ao', 'aa'],
-            myComparator: function(left, right) {
+            myComparator: function (left, right) {
                 return left === right;
             }
         })).toEqual(['o']);
     });
-    it('allows using an equality comparator', function() {
+    it('allows using an equality comparator', function () {
         var fn = parse('arr | filter:{name: "Jo"}:true');
         expect(fn({arr: [
             {name: 'Jo'},

@@ -3,7 +3,7 @@
 var _ = require('lodash');
 
 function filterFilter() {
-    return function (array, filterExpr, comparator) {
+    return function(array, filterExpr, comparator) {
         var predicateFn;
         if (_.isFunction(filterExpr)) {
             predicateFn = filterExpr;
@@ -26,7 +26,7 @@ function createPredicateFn(expression, comparator) {
     if (comparator === true) {
         comparator = _.isEqual;
     } else if (!_.isFunction(comparator)) {
-        comparator = function (actual, expected) {
+        comparator = function(actual, expected) {
             if (_.isUndefined(actual)) {
                 return false;
             }
@@ -46,7 +46,7 @@ function createPredicateFn(expression, comparator) {
                 matchAnyProperty);
         }
         if (_.isArray(actual)) {
-            return _.some(actual, function (actualItem) {
+            return _.some(actual, function(actualItem) {
                 return deepCompare(actualItem, expected, comparator,
                     matchAnyProperty);
             });
@@ -54,7 +54,7 @@ function createPredicateFn(expression, comparator) {
         if (_.isObject(actual)) {
             if (_.isObject(expected) && !inWildcard) {
                 return _.every(_.toPlainObject(expected),
-                    function (expectedVal, expectedKey) {
+                    function(expectedVal, expectedKey) {
                         if (_.isUndefined(expectedVal)) {
                             return true;
                         }
@@ -66,7 +66,7 @@ function createPredicateFn(expression, comparator) {
                             isWildcard, isWildcard);
                     });
             } else if (matchAnyProperty) {
-                return _.some(actual, function (value, key) {
+                return _.some(actual, function(value, key) {
                     return deepCompare(value, expected, comparator,
                         matchAnyProperty);
                 });

@@ -3,32 +3,32 @@
 var parse = require('../src/parse.js');
 var filter = require('../src/filter').filter;
 
-describe('filter filter', function () {
-    it('is available', function () {
+describe('filter filter', function() {
+    it('is available', function() {
         expect(filter('filter')).toBeDefined();
     });
-    it('can filter an array with a predicate function', function () {
+    it('can filter an array with a predicate function', function() {
         var fn = parse('[1, 2, 3, 4] | filter:isOdd');
         var scope = {
-            isOdd: function (n) {
+            isOdd: function(n) {
                 return n % 2 !== 0;
             }
         };
         expect(fn(scope)).toEqual([1, 3]);
     });
-    it('can filter an array of strings with a string', function () {
+    it('can filter an array of strings with a string', function() {
         var fn = parse('arr | filter:"a"');
         expect(fn({ arr: ['a', 'b', 'a'] })).toEqual(['a', 'a']);
     });
-    it('filters an array of strings with substring matching', function () {
+    it('filters an array of strings with substring matching', function() {
         var fn = parse('arr | filter:"o"');
         expect(fn({ arr: ['quick', 'brown', 'fox'] })).toEqual(['brown', 'fox']);
     });
-    it('filters an array of strings ignoring case', function () {
+    it('filters an array of strings ignoring case', function() {
         var fn = parse('arr | filter:"o"');
         expect(fn({ arr: ['quick', 'BROWN', 'fox'] })).toEqual(['BROWN', 'fox']);
     });
-    it('filters an array of objects where any value matches', function () {
+    it('filters an array of objects where any value matches', function() {
         var fn = parse('arr | filter:"o"');
         expect(fn({
             arr: [
@@ -41,7 +41,7 @@ describe('filter filter', function () {
             { firstName: 'Jane', lastName: 'Fox' }
         ]);
     });
-    it('filters an array of arrays where a nested value matches', function () {
+    it('filters an array of arrays where a nested value matches', function() {
         var fn = parse('arr | filter:"o"');
         expect(fn({
             arr: [
@@ -51,7 +51,7 @@ describe('filter filter', function () {
         })).toEqual([[{ name: 'John' }, { name: 'Mary' }]
         ]);
     });
-    it('filters with a number', function () {
+    it('filters with a number', function() {
         var fn = parse('arr | filter:42');
         expect(fn({
             arr: [
@@ -63,7 +63,7 @@ describe('filter filter', function () {
             { name: 'Mary', age: 42 }
         ]);
     });
-    it('filters with a boolean value', function () {
+    it('filters with a boolean value', function() {
         var fn = parse('arr | filter:true');
         expect(fn({
             arr: [
@@ -76,27 +76,27 @@ describe('filter filter', function () {
             { name: 'John', admin: true }
         ]);
     });
-    it('filters with a substring numeric value', function () {
+    it('filters with a substring numeric value', function() {
         var fn = parse('arr | filter:42');
         expect(fn({ arr: ['contains 42'] })).toEqual(['contains 42']);
     });
-    it('filters matching null', function () {
+    it('filters matching null', function() {
         var fn = parse('arr | filter:null');
         expect(fn({ arr: [null, 'not null'] })).toEqual([null]);
     });
-    it('does not match null value with the string null', function () {
+    it('does not match null value with the string null', function() {
         var fn = parse('arr | filter:"null"');
         expect(fn({ arr: [null, 'not null'] })).toEqual(['not null']);
     });
-    it('does not match undefined values', function () {
+    it('does not match undefined values', function() {
         var fn = parse('arr | filter:"undefined"');
         expect(fn({ arr: [undefined, 'undefined'] })).toEqual(['undefined']);
     });
-    it('allows negating string filter', function () {
+    it('allows negating string filter', function() {
         var fn = parse('arr | filter:"!o"');
         expect(fn({ arr: ['quick', 'brown', 'fox'] })).toEqual(['quick']);
     });
-    it('filters with an object', function () {
+    it('filters with an object', function() {
         var fn = parse('arr | filter:{name: "o"}');
         expect(fn({
             arr: [
@@ -107,7 +107,7 @@ describe('filter filter', function () {
             { name: 'Joe', role: 'admin' }
         ]);
     });
-    it('must match all criteria in an object', function () {
+    it('must match all criteria in an object', function() {
         var fn = parse('arr | filter:{name: "o", role: "m"}');
         expect(fn({
             arr: [
@@ -118,7 +118,7 @@ describe('filter filter', function () {
             { name: 'Joe', role: 'admin' }
         ]);
     });
-    it('matches everything when filtered with an empty object', function () {
+    it('matches everything when filtered with an empty object', function() {
         var fn = parse('arr | filter:{}');
         expect(fn({
             arr: [
@@ -130,7 +130,7 @@ describe('filter filter', function () {
             { name: 'Jane', role: 'moderator' }
         ]);
     });
-    it('filters with a nested object', function () {
+    it('filters with a nested object', function() {
         var fn = parse('arr | filter:{name: {first: "o"}}');
         expect(fn({
             arr: [
@@ -141,7 +141,7 @@ describe('filter filter', function () {
             { name: { first: 'Joe' }, role: 'admin' }
         ]);
     });
-    it('allows negation when filtering with an object', function () {
+    it('allows negation when filtering with an object', function() {
         var fn = parse('arr | filter:{name: {first: "!o"}}');
         expect(fn({
             arr: [
@@ -152,7 +152,7 @@ describe('filter filter', function () {
             { name: { first: 'Jane' }, role: 'moderator' }
         ]);
     });
-    it('ignores undefined values in expectation object', function () {
+    it('ignores undefined values in expectation object', function() {
         var fn = parse('arr | filter:{name: thisIsUndefined}');
         expect(fn({
             arr: [
@@ -164,7 +164,7 @@ describe('filter filter', function () {
             { name: 'Jane', role: 'moderator' }
         ]);
     });
-    it('filters with a nested object in array', function () {
+    it('filters with a nested object in array', function() {
         var fn = parse('arr | filter:{users: {name: {first: "o"}}}');
         expect(fn({
             arr: [
@@ -181,7 +181,7 @@ describe('filter filter', function () {
             }
         ]);
     });
-    it('filters with nested objects on the same level only', function () {
+    it('filters with nested objects on the same level only', function() {
         var items = [{ user: 'Bob' },
             { user: { name: 'Bob' } },
             { user: { name: { first: 'Bob', last: 'Fox' } } }];
@@ -196,7 +196,7 @@ describe('filter filter', function () {
             { user: { name: 'Bob' } }
         ]);
     });
-    it('filters with a wildcard property', function () {
+    it('filters with a wildcard property', function() {
         var fn = parse('arr | filter:{$: "o"}');
         expect(fn({arr: [
             {name: 'Joe', role: 'admin'},
@@ -207,7 +207,7 @@ describe('filter filter', function () {
             {name: 'Jane', role: 'moderator'}
         ]);
     });
-    it('filters nested objects with a wildcard property', function () {
+    it('filters nested objects with a wildcard property', function() {
         var fn = parse('arr | filter:{$: "o"}');
         expect(fn({arr: [
             {name: {first: 'Joe'}, role: 'admin'},
@@ -218,7 +218,7 @@ describe('filter filter', function () {
             {name: {first: 'Jane'}, role: 'moderator'}
         ]);
     });
-    it('filters wildcard properties scoped to parent', function () {
+    it('filters wildcard properties scoped to parent', function() {
         var fn = parse('arr | filter:{name: {$: "o"}}');
         expect(fn({arr: [
             {name: {first: 'Joe', last: 'Fox'}, role: 'admin'},
@@ -229,11 +229,11 @@ describe('filter filter', function () {
             {name: {first: 'Mary', last: 'Brown'}, role: 'admin'}
         ]);
     });
-    it('filters primitives with a wildcard property', function () {
+    it('filters primitives with a wildcard property', function() {
         var fn = parse('arr | filter:{$: "o"}');
         expect(fn({arr: ['Joe', 'Jane', 'Mary']})).toEqual(['Joe']);
     });
-    it('filters with a nested wildcard property', function () {
+    it('filters with a nested wildcard property', function() {
         var fn = parse('arr | filter:{$: {$: "o"}}');
         expect(fn({arr: [
             {name: {first: 'Joe'}, role: 'admin'},
@@ -243,16 +243,16 @@ describe('filter filter', function () {
             {name: {first: 'Joe'}, role: 'admin'}
         ]);
     });
-    it('allows using a custom comparator', function () {
+    it('allows using a custom comparator', function() {
         var fn = parse('arr | filter:{$: "o"}:myComparator');
         expect(fn({
             arr: ['o', 'oo', 'ao', 'aa'],
-            myComparator: function (left, right) {
+            myComparator: function(left, right) {
                 return left === right;
             }
         })).toEqual(['o']);
     });
-    it('allows using an equality comparator', function () {
+    it('allows using an equality comparator', function() {
         var fn = parse('arr | filter:{name: "Jo"}:true');
         expect(fn({arr: [
             {name: 'Jo'},

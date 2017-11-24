@@ -10,7 +10,7 @@
     },
     "rules": {
 //        "key-spacing" :["error", { "beforeColon": true }],
-        "indent": [1 , 4],
+        "indent": [1 , 4,{ "SwitchCase": 0}],
         "operator-linebreak": [2, "after", {"overrides": {"?": "after", ":": "after"}}],
         "no-unused-vars": "off",
         "no-console": 0,
@@ -30,7 +30,7 @@
         "space-infix-ops": ["error", {"int32Hint": true}],
         "space-in-parens": ["error", "never"],
         "space-before-function-paren": ["error", {
-            "anonymous": "always",
+            "anonymous": "never",
             "named": "never",
             "asyncArrow": "always"
         }],

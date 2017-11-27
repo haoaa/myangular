@@ -16,8 +16,12 @@ function createInjector(moduleToLoad) {
     };
 
     function invoke(fn) {
-        var args = _.map(fn.$inject, function (token) {
-            return cache[token];
+        var args = _.map(fn.$inject, function(token) {
+            if (_.isString(token)) {
+                return cache[token];
+            }else {
+                throw 'Incorrect injection token! Expected a string, got ' + token;
+            }
         });
         return fn.apply(null, args);
     }

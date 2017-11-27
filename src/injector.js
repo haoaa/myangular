@@ -15,6 +15,14 @@ function createInjector(moduleToLoad) {
         }
     };
 
+    function annotate(fn) {
+        if (_.isArray(fn)) {
+            return fn.slice(0, -1);
+        } else {
+            return fn.$inject;
+        }
+    }
+
     function invoke(fn, self, locals) {
         var args = _.map(fn.$inject, function(token) {
             if (_.isString(token)) {
@@ -46,6 +54,7 @@ function createInjector(moduleToLoad) {
         get : function(key) {
             return cache[key];
         },
+        annotate : annotate,
         invoke : invoke
     };
 }

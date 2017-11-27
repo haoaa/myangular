@@ -15,15 +15,17 @@ function createInjector(moduleToLoad) {
         }
     };
 
-    function invoke(fn) {
+    function invoke(fn, self, locals) {
         var args = _.map(fn.$inject, function(token) {
             if (_.isString(token)) {
-                return cache[token];
+                return locals && locals.hasOwnProperty(token) ?
+                    locals[token] :
+                    cache[token];
             }else {
                 throw 'Incorrect injection token! Expected a string, got ' + token;
             }
         });
-        return fn.apply(null, args);
+        return fn.apply(self, args);
     }
     _.forEach(moduleToLoad, function loadModule(moduleName) {
         if (!loadedModules.hasOwnProperty(moduleName)) {

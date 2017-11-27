@@ -231,28 +231,28 @@ describe('injector', function() {
             expect(instance.result).toBe(4);
         });
     });
-    describe('provider', function() {
-        it('allows registering a provider and uses its $get', function() {
-            var module = window.angular.module('myModule', []);
-            module.provider('a', {
-                $get: function() {
-                    return 42;
-                }
-            });
-            var injector = createInjector(['myModule']);
-            expect(injector.has('a')).toBe(true);
-            expect(injector.get('a')).toBe(42);
+
+    it('allows registering a provider and uses its $get', function() {
+        var module = window.angular.module('myModule', []);
+        module.provider('a', {
+            $get: function() {
+                return 42;
+            }
         });
-        it('injects the $get method of a provider', function() {
-            var module = window.angular.module('myModule', []);
-            module.constant('a', 1);
-            module.provider('b', {
-                $get: function(a) {
-                    return a + 2;
-                }
-            });
-            var injector = createInjector(['myModule']);
-            expect(injector.get('b')).toBe(3);
-        });
+        var injector = createInjector(['myModule']);
+        expect(injector.has('a')).toBe(true);
+        expect(injector.get('a')).toBe(42);
     });
+    it('injects the $get method of a provider', function() {
+        var module = window.angular.module('myModule', []);
+        module.constant('a', 1);
+        module.provider('b', {
+            $get: function(a) {
+                return a + 2;
+            }
+        });
+        var injector = createInjector(['myModule']);
+        expect(injector.get('b')).toBe(3);
+    });
+
 });

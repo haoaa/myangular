@@ -7,7 +7,8 @@ var STRIP_COMMENTS = /(\/\/.*$)|(\/\*.*?\*\/)/mg;
 var FN_ARG = /^\s*(_?)(\S+?)\1\s*$/;
 
 function createInjector(moduleToLoad, strictDi) {
-    var cache = {};
+    var providerCache = {};
+    var instanceCache = {};     var cache = {};
     var loadedModules = {};
     strictDi = (strictDi === true);
 
@@ -16,10 +17,10 @@ function createInjector(moduleToLoad, strictDi) {
             if (key === 'hasOwnProperty') {
                 throw 'hasOwnProperty is not a valid constant name!';
             }
-            cache[key] = value;
+            instanceCache[key] = value;
         },
         provider : function(key, provider) {
-            cache[key] = invoke(provider.$get, provider);
+            providerCache[key + 'Provider'] = provider;
         }
     };
     function instantiate(Type, locals) {
@@ -53,7 +54,7 @@ function createInjector(moduleToLoad, strictDi) {
             if (_.isString(token)) {
                 return locals && locals.hasOwnProperty(token) ?
                     locals[token] :
-                    cache[token];
+                    getService(token);
             }else {
                 throw 'Incorrect injection token! Expected a string, got ' + token;
             }
@@ -75,13 +76,20 @@ function createInjector(moduleToLoad, strictDi) {
             });
         }
     });
+    function getService(name) {
+        if (instanceCache.hasOwnProperty(name)) {
+            return instanceCache[name];
+        } else if (providerCache.hasOwnProperty(name + 'Provider')) {
+            var provider = providerCache[name + 'Provider'];
+            return invoke(provider.$get, provider);
+        }
+    }
     return {
         has : function(key) {
-            return cache.hasOwnProperty(key);
+            return instanceCache.hasOwnProperty(key) ||
+                providerCache.hasOwnProperty(key + 'Provider');
         },
-        get : function(key) {
-            return cache[key];
-        },
+        get : getService,
         annotate : annotate,
         invoke : invoke,
         instantiate: instantiate

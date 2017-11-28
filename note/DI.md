@@ -10,3 +10,20 @@ when get a provider depend on an INSTANTIATING service then a circular dependenc
 ### Provider Constructors
 The provider constructor is instantiated right when its registered. 
 If some of its dependencies have not been registered yet, it won’t work.
+```js
+ it('injects another provider to a provider constructor function', function() {
+        var module = window.angular.module('myModule', []);
+        module.provider('a', function AProvider() {
+            var value = 1;
+            this.setValue = function(v) { value = v; };
+            this.$get = function() { return value; };
+        });
+        // what inject here is the instantiated `AProvider {setValue: , $get: }`
+        module.provider('b', function BProvider(aProvider) {
+            aProvider.setValue(2);
+            this.$get = function() { };
+        });
+        var injector = createInjector(['myModule']);
+        expect(injector.get('a')).toBe(2);
+    });
+```

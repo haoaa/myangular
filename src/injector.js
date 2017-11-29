@@ -8,15 +8,21 @@ var FN_ARG = /^\s*(_?)(\S+?)\1\s*$/;
 var INSTANTIATING = {};
 
 function createInjector(moduleToLoad, strictDi) {
-    var providerCache = {};
-    var providerInjector = createInternalInjector(providerCache, function() {
-        throw 'Unknown provider: ' + path.join(' <- ');
-    });
-    var instanceCache = {};
-    var instanceInjector = createInternalInjector(instanceCache, function(name) {
-        var provider = providerInjector.get(name + 'Provider');
-        return instanceInjector.invoke(provider.$get, provider);
-    });
+    var providerCache = {_cacheType: "providerCache"},
+        instanceCache = {_cacheType: "instanceCache"};
+
+    var providerInjector =
+        providerCache.$injector =
+        createInternalInjector(providerCache, function() {
+            throw 'Unknown provider: ' + path.join(' <- ');
+        });
+
+    var instanceInjector =
+        instanceCache.$injector =
+        createInternalInjector(instanceCache, function(name) {
+            var provider = providerInjector.get(name + 'Provider');
+            return instanceInjector.invoke(provider.$get, provider);
+        });
     var loadedModules = {};
     var path = []; // dependency chain
 

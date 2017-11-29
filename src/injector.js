@@ -62,6 +62,16 @@ function createInjector(moduleToLoad, strictDi) {
             this.factory(key, function() {
                 return instanceInjector.instantiate(Constructor);
             });
+        },
+        decorator: function(serviceName, decoratorFn) {
+            var  provider = providerInjector.get(serviceName + 'Provider');
+            var original$get = provider.$get;
+            provider.$get = function() {
+                var instance = instanceInjector.invoke(original$get, provider);
+                // Modifications will be done here
+                instanceInjector.invoke(decoratorFn, null, {$delegate: instance});
+                return instance;
+            };
         }
     };
 

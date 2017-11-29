@@ -32,5 +32,10 @@ If some of its dependencies have not been registered yet, it won’t work.
 `$provide` only for provider injector
 `$injector` can be injected in both provider injector and instance injector
 
-### module.config
+### config blocks
 config function run after all provider cached and before any instance cached
+
+### run blocks
+The main difference between config blocks and run blocks is that run blocks are injected from the instance cache.
+
+The execution sequence is after all modules loaded.

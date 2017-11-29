@@ -123,17 +123,21 @@ function createInjector(moduleToLoad, strictDi) {
         };
     }
 
-
+    function runInvokeQueue(queue) {
+        _.forEach(queue, function(invokeArgs) {
+            var service = providerInjector.get(invokeArgs[0]); // $provider,$injector
+            var method = invokeArgs[1]; // invoke, provider
+            var args = invokeArgs[2]; // function, key-value, key-function
+            service[method].apply(service, args);
+        });
+    }
     _.forEach(moduleToLoad, function loadModule(moduleName) {
         if (!loadedModules.hasOwnProperty(moduleName)) {
             loadedModules[moduleName] =  true;
             var module = window.angular.module(moduleName);
             _.forEach(module.requires, loadModule);
-            _.forEach(module._invokeQueue, function(invokeArgs) {
-                var method = invokeArgs[0];
-                var args = invokeArgs[1];
-                providerCache.$provide[method].apply(providerCache.$provide, args);
-            });
+            runInvokeQueue(module._invokeQueue);
+            runInvokeQueue(module._configBlocks);
         }
     });
 

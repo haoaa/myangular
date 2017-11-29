@@ -27,3 +27,10 @@ If some of its dependencies have not been registered yet, it won’t work.
         expect(injector.get('a')).toBe(2);
     });
 ```
+
+### High-Level Dependency Injection Features
+`$provide` only for provider injector
+`$injector` can be injected in both provider injector and instance injector
+
+### module.config
+config function run after all provider cached and before any instance cached

@@ -62,7 +62,6 @@ describe('hash', function() {
             expect(obj.$$hashKey).toEqual(hash.match(/^object:(\S+)$/)[1]);
         });
         it('uses preassigned $$hashKey', function() {
-            console.log(hashKey({$$hashKey: 42}));
             expect(hashKey({$$hashKey: 42})).toEqual('object:42');
         });
         it('supports a function $$hashKey', function() {

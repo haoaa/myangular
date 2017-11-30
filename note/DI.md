@@ -45,3 +45,7 @@ So basically, a value is implemented with a factory, which in turn is implemente
 By the looks of it, we could just as well have simply stored the value in the instance cache, as we 
 do for constants. But doing it this way allows for decoration - a feature we’ll look at in a few mo-
 ments.
+
+### decorator
+How it works? Modify the original $get method with the `decoratorFn`,
+and in that function `decoratorFn` the original instance got injected as `$delegate`

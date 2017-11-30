@@ -1,8 +1,19 @@
 'use strict';
 
 function $QProvider() {
+    function Deferred() {
+
+    }
+
+    function defer() {
+        return new Deferred();
+    }
+
     this.$get = function() {
-        console.log();
+
+        return {
+            defer : defer
+        };
     };
 }
 

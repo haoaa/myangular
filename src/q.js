@@ -9,10 +9,10 @@ function $QProvider() {
         function Promise() {
             this.$$state = {};
         }
-        Promise.prototype.then = function(onFulfilled, onRejected) {
+        Promise.prototype.then = function(onFulfilled, onRejected, onProgress) {
             var result = new Deferred();
             this.$$state.pending = this.$$state.pending || [];
-            this.$$state.pending.push([result, onFulfilled, onRejected]);
+            this.$$state.pending.push([result, onFulfilled, onRejected, onProgress]);
             if (this.$$state.status > 0) {
                 scheduleProcessQueue(this.$$state);
             }
@@ -21,12 +21,12 @@ function $QProvider() {
         Promise.prototype.catch = function(onRejected) {
             return this.then(null, onRejected);
         };
-        Promise.prototype.finally = function(callback) {
+        Promise.prototype.finally = function(callback, progressBack) {
             return this.then(function(value) {
                 return handleFinallyCallback(callback, value, true);
             }, function(rejection) {
                 return handleFinallyCallback(callback, rejection, false);
-            });
+            }, progressBack);
         };
         function makePromise(value, resolved) {
             var d = new Deferred();
@@ -58,7 +58,8 @@ function $QProvider() {
             if (value && _.isFunction(value.then)) {
                 value.then(
                     _.bind(this.resolve, this),
-                    _.bind(this.reject, this)
+                    _.bind(this.reject, this),
+                    _.bind(this.notify, this)
                 );
             } else {
                 this.promise.$$state.status = 1;
@@ -73,6 +74,25 @@ function $QProvider() {
             this.promise.$$state.status = 2;
             this.promise.$$state.value = value;
             scheduleProcessQueue(this.promise.$$state);
+        };
+        Deferred.prototype.notify = function(progress) {
+            var pending = this.promise.$$state.pending;
+            if (pending && pending.length && !this.promise.$$state.status) {
+                $rootScope.$evalAsync(function() {
+                    _.each(pending, function(handlers) {
+                        var defer = handlers[0];
+                        var progressBack = handlers[3];
+                        try{
+                            defer.notify(_.isFunction(progressBack) ?
+                                (progressBack(progress)) :
+                                progress
+                            );
+                        } catch (e) {
+                            // console.log(e);
+                        }
+                    });
+                });
+            }
         };
 
         function scheduleProcessQueue(state) {

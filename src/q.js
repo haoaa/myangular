@@ -15,6 +15,10 @@ function $QProvider() {
             this.promise = new Promise();
         }
         Deferred.prototype.resolve = function(value) {
+            if (this.promise.$$state.status) {
+                return;
+            }
+            this.promise.$$state.status = 1;
             this.promise.$$state.value = value;
             scheduleProcessQueue(this.promise.$$state);
         };

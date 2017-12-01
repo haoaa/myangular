@@ -271,6 +271,7 @@ function $RootScopeProvider() {
                 childScope.$$children = [];
                 childScope.$$listeners = {};
             }
+            childScope.$id = _.uniqueId();
             childScope.$parent = parent;
             parent.$$children.push(childScope);
             return childScope;
@@ -464,6 +465,8 @@ function $RootScopeProvider() {
         };
 
         var $rootScope = new Scope();
+        $rootScope.$id = _.uniqueId();
+
         return $rootScope;
     }];
 }

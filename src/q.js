@@ -1,20 +1,40 @@
 'use strict';
 
 function $QProvider() {
-    function Deferred() {
 
-    }
+    this.$get = ['$rootScope', function($rootScope) {
 
-    function defer() {
-        return new Deferred();
-    }
+        function Promise() {
+            this.$$state = {};
+        }
+        Promise.prototype.then = function(onFulfilled) {
+            this.$$state.pending = onFulfilled;
+        };
 
-    this.$get = function() {
+        function Deferred() {
+            this.promise = new Promise();
+        }
+        Deferred.prototype.resolve = function(value) {
+            this.promise.$$state.value = value;
+            scheduleProcessQueue(this.promise.$$state);
+        };
 
+        function scheduleProcessQueue(state) {
+            $rootScope.$evalAsync(function() {
+                processQueue(state);
+            });
+        }
+        function processQueue(state) {
+            state.pending(state.value);
+        }
+
+        function defer() {
+            return new Deferred();
+        }
         return {
             defer : defer
         };
-    };
+    }];
 }
 
 module.exports = $QProvider;

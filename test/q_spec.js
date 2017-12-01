@@ -178,4 +178,20 @@ describe('$q', function() {
         $rootScope.$apply();
         expect(rejectSpy).toHaveBeenCalled();
     });
+    it('invokes a finally handler when fulfilled', function() {
+        var d = $q.defer();
+        var finallySpy  = jasmine.createSpy();
+        d.promise.finally(finallySpy);
+        d.resolve(42);
+        $rootScope.$apply();
+        expect(finallySpy).toHaveBeenCalledWith();
+    });
+    it('invokes a finally handler when rejected', function() {
+        var d = $q.defer();
+        var finallySpy  = jasmine.createSpy();
+        d.promise.finally(finallySpy);
+        d.reject('fail');
+        $rootScope.$apply();
+        expect(finallySpy).toHaveBeenCalledWith();
+    });
 });

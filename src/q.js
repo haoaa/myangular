@@ -61,12 +61,16 @@ function $QProvider() {
             _.each(pending, function(handlers) {
                 var deferred = handlers[0];
                 var fn = handlers[state.status];
-                if (_.isFunction(fn)) {
-                    deferred.resolve(fn(state.value));
-                } else if(state.status === 1) {
-                    deferred.resolve(state.value);
-                } else if(state.status === 2) {
-                    deferred.reject(state.value);
+                try {
+                    if (_.isFunction(fn)) {
+                        deferred.resolve(fn(state.value));
+                    } else if (state.status === 1) {
+                        deferred.resolve(state.value);
+                    } else if (state.status === 2) {
+                        deferred.reject(state.value);
+                    }
+                } catch (e) {
+                    deferred.reject(e);
                 }
             });
         }

@@ -13,3 +13,27 @@ Although there's more details to cover with, this is basic idea how promise work
 So, in summary, whenever a finally returns a Promise, we wait for it to become resolved before 
 continuing. We ignore that Promise’s resolution in favor of the original one, except when it rejects, 
 in which case we pass the rejection forward in the chain.
+
+### es6 & $q promise style
+```js
+var deferred = Q.defer();
+doAsyncStuff(function(err) {
+  if (err) {
+    deferred.reject(err);
+  } else {
+    deferred.resolve();
+  }
+});
+return deferred.promise;
+```
+```js
+return new Promise(function(resolve, reject) {
+  doAsyncStuff(function(err) {
+    if (err) {
+      reject(err);
+          } else {
+      resolve();
+    }
+  });
+});
+```

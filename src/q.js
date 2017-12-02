@@ -157,13 +157,26 @@ function $QProvider() {
             }
             return d.promise;
         }
-        return {
+
+        var $Q = function Q(resolver) {
+            if (!_.isFunction(resolver)) {
+                throw  'Expected function, got ' + resolver;
+            }
+            var d = new Deferred();
+            resolver(
+                d.resolve.bind(d),
+                d.reject.bind(d)
+            );
+            return d.promise;
+        };
+
+        return _.extend($Q, {
             defer : defer,
             reject: reject,
             when : when,
             resolve : when,
             all : all
-        };
+        });
     }];
 }
 

@@ -37,3 +37,8 @@ return new Promise(function(resolve, reject) {
   });
 });
 ```
+
+### $http `status`
+All that remains to be done in $http is a “normalization” of the status code. In error responses, 
+$httpBackend may return negative status codes, but $http never resolves to anything smaller 
+than 0: `status = Math.max(status, 0); `

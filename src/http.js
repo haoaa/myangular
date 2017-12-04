@@ -78,12 +78,38 @@ function $HttpProvider() {
                 }, header);
             }
 
-            function done(status, response, statusText) {
+            function headersGetter(headers) {
+                var headersObj;
+                return function(name) {
+                    headersObj = headersObj || parseHeaders(headers);
+                    if (name) {
+
+                        return headersObj[name.toLowerCase()];
+                    }else {
+                        return headersObj;
+                    }
+                };
+            }
+
+            function parseHeaders(headers) {
+                var lines = headers.split('\n');
+                return _.transform(lines, function(result, line) {
+                    var separatorAt = line.indexOf(':');
+                    var name = _.trim(line.substring(0, separatorAt).toLowerCase());
+                    var value = _.trim(line.substring(separatorAt + 1));
+                    if (name) {
+                        result[name] = value;
+                    }
+                }, {});
+            }
+
+            function done(status, response, headersString, statusText) {
                 status = Math.max(status, 0);
                 deferred[isSuccess(status) ? 'resolve' : 'reject']({
                     status : status,
                     data : response,
                     statusText : statusText,
+                    headers : headersGetter(headersString),
                     config : config
                 });
                 if (!$rootScope.$$phase) {

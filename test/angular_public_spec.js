@@ -38,4 +38,11 @@ describe('angularPublic', function() {
         expect(injector.has('$http')).toBe(true);
         expect(injector.has('$httpBackend')).toBe(true);
     });
+    it('makes default param serializer available through DI', function() {
+        var injector = createInjector(['ng']);
+        injector.invoke(function($httpParamSerializer) {
+            var result = $httpParamSerializer({a: 42, b: 43});
+            expect(result).toEqual('a=42&b=43');
+        });
+    });
 });

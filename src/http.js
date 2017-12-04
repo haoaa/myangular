@@ -35,6 +35,69 @@ function defaultHttpResponseTransform(data, header) {
     return data;
 }
 
+function $HttpParamSerializerProvider() {
+    this.$get = function() {
+        return function serializeParams(params) {
+            var parts = [];
+            _.each(params, function(value, key) {
+                if (_.isNull(value) || _.isUndefined(value)) {
+                    return;
+                }
+
+                if (!_.isArray(value)) {
+                    value = [value];
+                }
+
+                _.each(value, function(v) {
+                    if (_.isObject(v)) {
+                        v = JSON.stringify(v);
+                    }
+                    parts.push(encodeURIComponent(key) + '=' + encodeURIComponent(v));
+                });
+            });
+            return parts.join('&');
+        };
+    };
+}
+
+function $HttpParamSerializerJQLikeProvider() {
+    this.$get = function() {
+        return function(params) {
+            var parts = [];
+
+            function serialize(value, prefix, topLevel) {
+                if (_.isNull(value) || _.isUndefined(value)) {
+                    return;
+                }
+                if (_.isArray(value)) {
+                    _.forEach(value, function(v, i) {
+                        serialize(v, prefix + '[' + (_.isObject(v) ? i : '') + ']');
+                    });
+                } else if (_.isObject(value) && !_.isDate(value)) {
+                    _.forEach(value, function(v, k) {
+                        serialize(v, prefix +
+                            (topLevel ? '' : '[') +
+                            k +
+                            (topLevel ? '' : ']'));
+                    });
+                } else {
+                    parts.push(
+                        encodeURIComponent(prefix) + '=' + encodeURIComponent(value));
+                }
+            }
+            serialize(params, '', true);
+            return parts.join('&');
+        };
+    };
+}
+
+function buildUrl(url, serializedParams) {
+    if (serializedParams.length) {
+        url += (url.indexOf('?') === -1) ? '?' : '&';
+        url += serializedParams;
+    }
+    return url;
+}
 function $HttpProvider() {
 
     var defaults = this.defaults = {
@@ -60,7 +123,8 @@ function $HttpProvider() {
                 return data;
             }
         }],
-        transformResponse : [defaultHttpResponseTransform]
+        transformResponse : [defaultHttpResponseTransform],
+        paramSerializer : '$httpParamSerializer'
     };
 
     function executeHeaderFns(header, config) {
@@ -139,7 +203,7 @@ function $HttpProvider() {
         }
     }
 
-    this.$get = ['$httpBackend', '$q', '$rootScope',  function($httpBackend, $q, $rootScope) {
+    this.$get = ['$httpBackend', '$q', '$rootScope', '$injector', function($httpBackend, $q, $rootScope, $injector) {
 
         function sendReq(config, reqData) {
             var deferred = $q.defer();
@@ -157,9 +221,11 @@ function $HttpProvider() {
                 }
             }
 
+            var url = buildUrl(config.url, config.paramSerializer(config.params));
+
             $httpBackend(
                 config.method,
-                config.url,
+                url,
                 reqData,
                 done,
                 config.headers,
@@ -173,11 +239,15 @@ function $HttpProvider() {
             var config = _.extend({
                 method : 'GET',
                 transformRequest : defaults.transformRequest,
-                transformResponse : defaults.transformResponse
+                transformResponse : defaults.transformResponse,
+                paramSerializer : defaults.paramSerializer
             }, requestConfig);
 
             config.headers = mergeHeaders(requestConfig);
 
+            if (_.isString(config.paramSerializer)) {
+                config.paramSerializer = $injector.get(config.paramSerializer);
+            }
             if (_.isUndefined(config.withCredentials) &&
                 !_.isUndefined(defaults.withCredentials)) {
                 config.withCredentials = defaults.withCredentials;
@@ -221,4 +291,8 @@ function $HttpProvider() {
         return $http;
     }];
 }
-module.exports = $HttpProvider;
+module.exports = {
+    $HttpProvider : $HttpProvider,
+    $HttpParamSerializerProvider : $HttpParamSerializerProvider,
+    $HttpParamSerializerJQLikeProvider : $HttpParamSerializerJQLikeProvider
+};

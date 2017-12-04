@@ -232,4 +232,22 @@ describe('$http', function() {
         requests[0].respond(200, {'Content-Type': 'text/plain'}, 'Hello');
         expect(response.headers()).toEqual({'content-type': 'text/plain'});
     });
+    it('allows setting withCredentials', function() {
+        $http({
+            method: 'POST',
+            url: 'http://teropa.info',
+            data: 42,
+            withCredentials: true
+        });
+        expect(requests[0].withCredentials).toBe(true);
+    });
+    it('allows setting withCredentials from defaults', function() {
+        $http.defaults.withCredentials = true;
+        $http({
+            method: 'POST',
+            url: 'http://teropa.info',
+            data: 42
+        });
+        expect(requests[0].withCredentials).toBe(true);
+    });
 });

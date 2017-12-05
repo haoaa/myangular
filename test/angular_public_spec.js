@@ -45,4 +45,8 @@ describe('angularPublic', function() {
             expect(result).toEqual('a=42&b=43');
         });
     });
+    it('sets up $compile', function() {
+        var injector = createInjector(['ng']);
+        expect(injector.has('$compile')).toBe(true);
+    });
 });

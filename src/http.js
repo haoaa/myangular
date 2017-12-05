@@ -304,6 +304,19 @@ function $HttpProvider() {
             _.eachRight(interceptors, function(interceptor) {
                 promise = promise.then(interceptor.response, interceptor.responseError);
             });
+
+            promise.success = function(fn) {
+                promise.then(function(responce) {
+                    fn(responce.data, responce.status, responce.headers, config);
+                });
+                return promise;
+            };
+            promise.error = function(fn) {
+                promise.catch(function(responce) {
+                    fn(responce.data, responce.status, responce.headers, config);
+                });
+                return promise;
+            };
             return promise;
         }
 

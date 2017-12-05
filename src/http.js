@@ -288,6 +288,25 @@ function $HttpProvider() {
         }
 
         $http.defaults = defaults;
+
+        _.each(['get', 'head', 'delete'], function(method) {
+            $http[method] = function(url, config) {
+                return $http(_.extend(config || {}, {
+                    url: url,
+                    method: method.toUpperCase()
+                }));
+            };
+        });
+        _.each(['post', 'put', 'patch'], function(method) {
+            $http[method] = function(url, data, config) {
+                return $http(_.extend(config || {}, {
+                    url : url,
+                    data : data,
+                    method : method.toUpperCase()
+                }));
+            };
+        });
+
         return $http;
     }];
 }

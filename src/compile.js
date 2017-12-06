@@ -69,6 +69,11 @@ function $CompileProvider($provide) {
                 }
                 addDirective(directives, normalizedAttrName);
             });
+
+            _.forEach(node.classList, function(cls) {
+                var normalizeCalssName = directiveNormalize(cls.toLowerCase());
+                addDirective(directives, normalizeCalssName);
+            });
             return directives;
         }
 

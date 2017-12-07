@@ -651,5 +651,77 @@ describe('$compile', function() {
                 expect(attrs1).toBe(attrs2);
             });
         });
+        it('sets prop for boolean attributes', function() {
+            registerAndCompile(
+                'myDirective',
+                '<input my-directive>',
+                function(element, attrs) {
+                    attrs.$set('disabled', true);
+                    expect(element.prop('disabled')).toBe(true);
+                }
+            );
+        });
+        it('sets prop for boolean attributes even when not flushing', function() {
+            registerAndCompile(
+                'myDirective',
+                '<input my-directive>',
+                function(element, attrs) {
+                    attrs.$set('disabled', true, false);
+                    expect(element.prop('disabled')).toBe(true);
+                }
+            );
+        });
+        it('denormalizes attribute name when explicitly given', function() {
+            registerAndCompile(
+                'myDirective',
+                '<my-directive some-attribute="42"></my-directive>',
+                function(element, attrs) {
+                    attrs.$set('someAttribute', 43, true, 'some-attribute');
+                    expect(element.attr('some-attribute')).toEqual('43');
+                }
+            );
+        });
+        it('denormalizes attribute by snake-casing', function() {
+            registerAndCompile(
+                'myDirective',
+                '<my-directive some-attribute="42"></my-directive>',
+                function(element, attrs) {
+                    attrs.$set('someAttribute', 43);
+                    expect(element.attr('some-attribute')).toEqual('43');
+                }
+            );
+        });
+        it('denormalizes attribute by using original attribute name', function() {
+            registerAndCompile(
+                'myDirective',
+                '<my-directive x-some-attribute="42"></my-directive>',
+                function(element, attrs) {
+                    attrs.$set('someAttribute', '43');
+                    expect(element.attr('x-some-attribute')).toEqual('43');
+                }
+            );
+        });
+        it('does not use ng-attr- prefix in denormalized names', function() {
+            registerAndCompile(
+                'myDirective',
+                '<my-directive ng-attr-some-attribute="42"></my-directive>',
+                function(element, attrs) {
+                    attrs.$set('someAttribute', 43);
+                    expect(element.attr('some-attribute')).toEqual('43');
+                }
+            );
+        });
+        it('uses new attribute name after once given', function() {
+            registerAndCompile(
+                'myDirective',
+                '<my-directive x-some-attribute="42"></my-directive>',
+                function(element, attrs) {
+                    attrs.$set('someAttribute', 43, true, 'some-attribute');
+                    attrs.$set('someAttribute', 44);
+                    expect(element.attr('some-attribute')).toEqual('44');
+                    expect(element.attr('x-some-attribute')).toEqual('42');
+                }
+            );
+        });
     });
 });

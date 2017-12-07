@@ -558,7 +558,7 @@ describe('$compile', function() {
             var givenAttrs;
             var injector = makeInjectorWithDirectives(dirName, function() {
                 return {
-                    restrict: 'E',
+                    restrict: 'EACM',
                     compile: function(element, attrs) {
                         givenAttrs = attrs;
                     }
@@ -586,6 +586,24 @@ describe('$compile', function() {
                 '<my-directive my-attr=" val "></my-directive>',
                 function(element, attrs) {
                     expect(attrs.myAttr).toEqual('val');
+                }
+            );
+        });
+        it('sets the value of boolean attributes to true', function() {
+            registerAndCompile(
+                'myDirective',
+                '<input my-directive disabled>',
+                function(element, attrs) {
+                    expect(attrs.disabled).toBe(true);
+                }
+            );
+        });
+        it('does not set the value of custom boolean attributes to true', function() {
+            registerAndCompile(
+                'myDirective',
+                '<input my-directive whatever>',
+                function(element, attrs) {
+                    expect(attrs.whatever).toEqual('');
                 }
             );
         });

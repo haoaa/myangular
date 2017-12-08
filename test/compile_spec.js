@@ -1272,5 +1272,23 @@ describe('$compile', function() {
                 expect(givenScope.anAttr).toEqual('42');
             });
         });
+        it('allows aliasing observed attribute', function() {
+            var givenScope;
+            var injector = makeInjectorWithDirectives('myDirective', function() {
+                return {
+                    scope: {
+                        aScopeAttr: '@anAttr'
+                    },
+                    link: function(scope, element, attrs) {
+                        givenScope = scope;
+                    }
+                };
+            });
+            injector.invoke(function($compile, $rootScope) {
+                var el = $('<div my-directive an-attr="42"></div>');
+                $compile(el)($rootScope);
+                expect(givenScope.aScopeAttr).toEqual('42');
+            });
+        });
     });
 });

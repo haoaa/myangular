@@ -40,8 +40,10 @@ function isBooleanAttribute(node, attrName) {
 function parseIsolateBindings(scope) {
     var bindings = {};
     _.forEach(scope, function(definition, scopeName) {
+        var match = definition.match(/\s*@\s*(\w*)\s*/);
         bindings[scopeName] = {
-            mode : definition
+            mode : '@',
+            attrName : match[1] || scopeName
         };
     });
     return bindings;
@@ -403,13 +405,14 @@ function $CompileProvider($provide) {
                     _.forEach(
                         newIsolateScopeDirective.$$isolateBindings,
                         function(definition, scopeName) {
+                            var attrName = definition.attrName;
                             switch (definition.mode) {
                             case '@':
-                                attrs.$observe(scopeName, function(newAttrValue) {
+                                attrs.$observe(attrName, function(newAttrValue) {
                                     isolateScope[scopeName] = newAttrValue;
                                 });
-                                if (attrs[scopeName]) {
-                                    isolateScope[scopeName] = attrs[scopeName];
+                                if (attrs[attrName]) {
+                                    isolateScope[scopeName] = attrs[attrName];
                                 }
                                 break;
                             }

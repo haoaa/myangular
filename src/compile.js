@@ -183,16 +183,20 @@ function $CompileProvider($provide) {
             });
 
             function compositeLinkFn(scope, linkNodes) {
+                var stableNodeList = [];
+                _.forEach(linkFns, function(linkFn) {
+                    stableNodeList[linkFn.idx] = linkNodes[linkFn.idx];
+                });
                 _.forEach(linkFns, function(linkFn) {
                     if (linkFn.nodeLinkFn) {
                         linkFn.nodeLinkFn(
                             linkFn.childLinkFn,
                             scope,
-                            linkNodes[linkFn.idx]);
+                            stableNodeList[linkFn.idx]);
                     }else {
                         linkFn.childLinkFn(
                             scope,
-                            linkNodes[linkFn.idx].childNodes
+                            stableNodeList[linkFn.idx].childNodes
                         );
                     }
                 });

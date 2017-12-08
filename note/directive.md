@@ -27,3 +27,6 @@ This is often where application data and functionality gets attached to the dire
 ### inherited scope
 When there is at least one directive on an element that requests an inherited scope, all directives on 
 that element will receive that inherited scope
+
+### Isolate Attribute Bindings
+This is because all the directives of an element, isolated or not, share the same Attributes object.

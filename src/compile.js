@@ -69,7 +69,7 @@ function $CompileProvider($provide) {
         }
     };
 
-    this.$get = ['$injector', function($injector) {
+    this.$get = ['$injector', '$rootScope', function($injector, $rootScope) {
 
         function Attributes(element) {
             this.$$element = element;
@@ -95,6 +95,34 @@ function $CompileProvider($provide) {
             if (writeAttr !== false) {
                 this.$$element.attr(attrName, value);
             }
+
+            if (this.$$oberservers) {
+                _.forEach(this.$$oberservers[key], function(observer) {
+                    try{
+                        observer(value);
+                    }catch (e) {
+                        console.log(e);
+                    }
+                });
+            }
+        };
+
+        Attributes.prototype.$observe = function(key, fn) {
+            var self = this;
+            this.$$oberservers = this.$$oberservers || Object.create(null);
+            this.$$oberservers[key] = this.$$oberservers[key] || [];
+            this.$$oberservers[key].push(fn);
+
+            $rootScope.$evalAsync(function() {
+                fn(self[key]);
+            });
+
+            return function() {
+                var index = self.$$oberservers[key].indexOf(fn);
+                if (index !== -1) {
+                    self.$$oberservers[key].splice(index, 1);
+                }
+            };
         };
 
         function compile($compileNodes) {

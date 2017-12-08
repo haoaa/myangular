@@ -134,8 +134,8 @@ function $CompileProvider($provide) {
         };
 
         Attributes.prototype.$updateClass = function(newClassVal, oldClassVal) {
-            var newClasses = newClassVal.split(/\s*/);
-            var oldClasses = oldClassVal.split(/\s*/);
+            var newClasses = newClassVal.split(/\s+/);
+            var oldClasses = oldClassVal.split(/\s+/);
             var addedClasses = _.difference(newClasses, oldClasses);
             var removedClasses = _.difference(oldClasses, newClasses);
 
@@ -148,7 +148,11 @@ function $CompileProvider($provide) {
         };
 
         function compile($compileNodes) {
-            return compileNodes($compileNodes);
+            compileNodes($compileNodes);
+
+            return function publicLinkFn(scope) {
+                $compileNodes.data('$scope', scope);
+            };
         }
 
         function compileNodes($compileNodes) {

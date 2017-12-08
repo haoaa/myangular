@@ -37,6 +37,15 @@ function isBooleanAttribute(node, attrName) {
     return BOOLEAN_ATTRS[attrName] && BOOLEAN_ELEMENTS[node.nodeName];
 }
 
+function parseIsolateBindings(scope) {
+    var bindings = {};
+    _.forEach(scope, function(definition, scopeName) {
+        bindings[scopeName] = {
+            mode : definition
+        };
+    });
+    return bindings;
+}
 function $CompileProvider($provide) {
 
     var hasDirectives = {};
@@ -57,6 +66,9 @@ function $CompileProvider($provide) {
                         directive.priority = directive.priority || 0;
                         if (directive.link && !directive.compile) {
                             directive.compile = _.constant(directive.link);
+                        }
+                        if (_.isObject(directive.scope)) {
+                            directive.$$isolateBindings = parseIsolateBindings(directive.scope);
                         }
                         directive.name = directive.name || name;
                         directive.index = i;
@@ -388,6 +400,21 @@ function $CompileProvider($provide) {
                     isolateScope = scope.$new(true);
                     $element.addClass('ng-isolate-scope');
                     $element.data('$isolateScope', isolateScope);
+                    _.forEach(
+                        newIsolateScopeDirective.$$isolateBindings,
+                        function(definition, scopeName) {
+                            switch (definition.mode) {
+                            case '@':
+                                attrs.$observe(scopeName, function(newAttrValue) {
+                                    isolateScope[scopeName] = newAttrValue;
+                                });
+                                if (attrs[scopeName]) {
+                                    isolateScope[scopeName] = attrs[scopeName];
+                                }
+                                break;
+                            }
+                        }
+                    );
                 }
                 _.forEach(preLinkFns, function(linkFn) {
                     linkFn(linkFn.isolateScope ? isolateScope : scope, $element, attrs);

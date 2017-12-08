@@ -191,9 +191,11 @@ function $CompileProvider($provide) {
                 }
 
             } else if (node.nodeType === Node.COMMENT_NODE) {
-                match = /^\s*directive\:\s*([\d\w\-_]+)/.exec(node.nodeValue);
+                match = /^\s*directive\:\s*([\d\w\-_]+)\s*(.*)/.exec(node.nodeValue);
                 if (match) {
-                    addDirective(directives, directiveNormalize(match[1]), 'M');
+                    if(addDirective(directives, directiveNormalize(match[1]), 'M')) {
+                        attrs[directiveNormalize(match[1])] = match[2] ? match[2].trim() : undefined;
+                    }
                 }
             }
 

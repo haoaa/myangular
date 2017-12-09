@@ -40,7 +40,7 @@ function isBooleanAttribute(node, attrName) {
 function parseIsolateBindings(scope) {
     var bindings = {};
     _.forEach(scope, function(definition, scopeName) {
-        var match = definition.match(/\s*([@<])(\??)\s*(\w*)\s*/);
+        var match = definition.match(/\s*([@<=])(\??)\s*(\w*)\s*/);
         bindings[scopeName] = {
             mode : match[1],
             optional : match[2],
@@ -407,6 +407,8 @@ function $CompileProvider($provide) {
                         newIsolateScopeDirective.$$isolateBindings,
                         function(definition, scopeName) {
                             var attrName = definition.attrName;
+                            var parentGet, unwatch;
+
                             switch (definition.mode) {
                             case '@':
                                 attrs.$observe(attrName, function(newAttrValue) {
@@ -420,9 +422,20 @@ function $CompileProvider($provide) {
                                 if (definition.optional && !attrs[attrName]) {
                                     break;
                                 }
-                                var parentGet = $parse(attrs[attrName]);
+                                parentGet = $parse(attrs[attrName]);
                                 isolateScope[scopeName] = parentGet(scope);
-                                var unwatch = scope.$watch(parentGet, function(newValue) {
+                                unwatch = scope.$watch(parentGet, function(newValue) {
+                                    isolateScope[scopeName] = newValue;
+                                });
+                                isolateScope.$on('$destroy', unwatch);
+                                break;
+                            case '=':
+                                if (definition.optional && !attrs[attrName]) {
+                                    break;
+                                }
+                                parentGet = $parse(attrs[attrName]);
+                                isolateScope[scopeName] = parentGet(scope);
+                                unwatch = scope.$watch(parentGet, function(newValue) {
                                     isolateScope[scopeName] = newValue;
                                 });
                                 isolateScope.$on('$destroy', unwatch);

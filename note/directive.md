@@ -30,3 +30,12 @@ that element will receive that inherited scope
 
 ### Isolate Attribute Bindings
 This is because all the directives of an element, isolated or not, share the same Attributes object.
+
+
+### One-Way Data Binding
+Scope Inheritance |Isolate Scopes with Data Binding
+----|------
+Everything is shared from the parent to the child. |  Only attributes explicitly mentioned in expressions are shared. 
+One-to-one correspondence between parent and child attributes.| Child attributes may not have  matching parent attributes, but can be any expressions instead.
+
+- One-way bindings were not added until Angular 1.5, whereas two-way bindings have been around much longer. However, in most cases it is likely that only the downward direction of a two-way binding is used and it could be defined as a one-way binding instead. 

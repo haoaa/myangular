@@ -90,7 +90,7 @@ function $CompileProvider($provide) {
         }
     };
 
-    this.$get = ['$injector', '$rootScope', '$parse', function($injector, $rootScope, $parse) {
+    this.$get = ['$injector', '$rootScope', '$parse', '$controller', function($injector, $rootScope, $parse, $controller) {
 
         function Attributes(element) {
             this.$$element = element;
@@ -254,6 +254,7 @@ function $CompileProvider($provide) {
             var terminal = false;
             var preLinkFns = [], postLinkFns = [];
             var newScopeDirective, newIsolateScopeDirective;
+            var controllerDirectives;
 
             // add preLinkFn postLinkFn, set isolateScope to linkFns
             function addLinkFns(preLinkFn, postLinkFn, attrStart, attrEnd, isolateScope) {
@@ -293,6 +294,12 @@ function $CompileProvider($provide) {
                         newScopeDirective = newScopeDirective || directive;
                     }
                 }
+
+                if (directive.controller) {
+                    controllerDirectives = controllerDirectives || {};
+                    controllerDirectives[directive.name] = directive;
+                }
+
                 if (directive.compile) {
                     var linkFn = directive.compile($compileNode, attrs);
                     var isolateScope = (directive === newIsolateScopeDirective);
@@ -312,6 +319,16 @@ function $CompileProvider($provide) {
 
             function nodeLinkFn(childLinkFn, scope, linkNode) {
                 var $element =  $(linkNode);
+
+                if (controllerDirectives) {
+                    _.forEach(controllerDirectives, function(directive) {
+                        var controllerName = directive.controller;
+                        if (controllerName === '@') {
+                            controllerName = attrs[directive.name];
+                        }
+                        $controller(controllerName);
+                    });
+                }
 
                 // deal witch isolateScope before link fun exec
                 var isolateScope;

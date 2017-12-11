@@ -39,3 +39,7 @@ Everything is shared from the parent to the child. |  Only attributes explicitly
 One-to-one correspondence between parent and child attributes.| Child attributes may not have  matching parent attributes, but can be any expressions instead.
 
 - One-way bindings were not added until Angular 1.5, whereas two-way bindings have been around much longer. However, in most cases it is likely that only the downward direction of a two-way binding is used and it could be defined as a one-way binding instead. 
+
+## Controllers 
+> Directives get top billing in Angular, and controllers have a supporting role in helping directives do their job.
+> The $controller provider, the controller integration of the directive compiler, and the ngController directive.

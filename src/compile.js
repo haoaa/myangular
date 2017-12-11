@@ -242,7 +242,7 @@ function $CompileProvider($provide) {
 
         /**
          * mvp : construct  preLinkFn postLinkFn by iterating directives:array executing compile:function,
-         * deal with different kind scope and set the flag.
+         * deal with different kind scope and set the flag. instantiate controller.
          * @param directives
          * @param compileNode
          * @param attrs
@@ -322,11 +322,16 @@ function $CompileProvider($provide) {
 
                 if (controllerDirectives) {
                     _.forEach(controllerDirectives, function(directive) {
+                        var locals = {
+                            $scope : scope,
+                            $element : $element,
+                            $attrs : attrs
+                        };
                         var controllerName = directive.controller;
                         if (controllerName === '@') {
                             controllerName = attrs[directive.name];
                         }
-                        $controller(controllerName);
+                        $controller(controllerName, locals, directive.controllerAs);
                     });
                 }
 

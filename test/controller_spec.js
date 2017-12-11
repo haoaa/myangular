@@ -94,4 +94,44 @@ describe('angularPublic', function() {
         expect(controller).toBeDefined();
         expect(controller instanceof window.MyController).toBe(true);
     });
+    it('can return a semi-constructed controller', function() {
+        var injector = createInjector(['ng']);
+        var $controller = injector.get('$controller');
+        function MyController() {
+            this.constructed = true;
+            this.myAttrWhenConstructed = this.myAttr;
+        }
+        var controller = $controller(MyController, null, true);
+        expect(controller.constructed).toBeUndefined();
+        expect(controller.instance).toBeDefined();
+        controller.instance.myAttr = 42;
+        var actualController = controller();
+        expect(actualController.constructed).toBeDefined();
+        expect(actualController.myAttrWhenConstructed).toBe(42);
+    });
+    it('can return a semi-constructed ctrl when using array injection', function() {
+        var injector = createInjector(['ng', function($provide) {
+            $provide.constant('aDep', 42);
+        }]);
+        var $controller = injector.get('$controller');
+        function MyController(aDep) {
+            this.aDep = aDep;
+            this.constructed = true;
+        }
+        var controller = $controller(['aDep', MyController], null, true);
+        expect(controller.constructed).toBeUndefined();
+        var actualController = controller();
+        expect(actualController.constructed).toBeDefined();
+        expect(actualController.aDep).toBe(42);
+    });
+    it('can bind semi-constructed controller to scope', function() {
+        var injector = createInjector(['ng']);
+        var $controller = injector.get('$controller');
+        function MyController() {
+        }
+        var scope = {};
+        var controller = $controller(MyController, {$scope: scope}, true, 'myCtrl');
+        expect(scope.myCtrl).toBe(controller.instance);
+    });
+
 });

@@ -43,3 +43,20 @@ One-to-one correspondence between parent and child attributes.| Child attributes
 ## Controllers 
 > Directives get top billing in Angular, and controllers have a supporting role in helping directives do their job.
 > The $controller provider, the controller integration of the directive compiler, and the ngController directive.
+
+### bindToController
+which controls where all the isolate scope bindings will be attached. With `controllerAs` (bind controller to scope )option, which then makes the controller with all those isolate bindings available to child elements
+
+### `emi-constructed` in Controllers on Isolate Scope Directives
+•  It is a function which, when called, will invoke the controller constructor
+•  It has an attribute called instance that points to the controller object.
+
+How to implement it?
+```js
+function a(){this.b=3}
+
+c =new a() // controller object in new way
+// or
+c1 = Object.create(c)
+a.call(c1)
+```

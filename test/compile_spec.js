@@ -1729,5 +1729,97 @@ describe('$compile', function() {
                 expect($rootScope.myCtrl instanceof MyController).toBe(true);
             });
         });
+        it('gets isolate scope as injected $scope', function() {
+            var gotScope;
+            function MyController($scope) {
+                gotScope = $scope;
+            }
+            var injector = createInjector(['ng',
+                function($controllerProvider, $compileProvider) {
+                    $controllerProvider.register('MyController', MyController);
+                    $compileProvider.directive('myDirective', function() {
+                        return {
+                            scope: {},
+                            controller: 'MyController'
+                        };
+                    });
+                }]);
+            injector.invoke(function($compile, $rootScope) {
+                var el = $('<div my-directive></div>');
+                $compile(el)($rootScope);
+                expect(gotScope).not.toBe($rootScope);
+            });
+        });
+        it('has isolate scope bindings available during construction', function() {
+            var gotMyAttr;
+            function MyController($scope) {
+                gotMyAttr = $scope.myAttr;
+            }
+            var injector = createInjector(['ng',
+                function($controllerProvider, $compileProvider) {
+                    $controllerProvider.register('MyController', MyController);
+                    $compileProvider.directive('myDirective', function() {
+                        return {
+                            scope: {
+                                myAttr: '@myDirective'
+                            },
+                            controller: 'MyController'
+                        };
+                    });
+                }]);
+            injector.invoke(function($compile, $rootScope) {
+                var el = $('<div my-directive="abc"></div>');
+                $compile(el)($rootScope);
+                expect(gotMyAttr).toEqual('abc');
+            });
+        });
+        it('can bind iso scope bindings through bindToController', function() {
+            var gotMyAttr;
+            function MyController() {
+                gotMyAttr = this.myAttr;
+            }
+            var injector = createInjector(['ng',
+                function($controllerProvider, $compileProvider) {
+                    $controllerProvider.register('MyController', MyController);
+                    $compileProvider.directive('myDirective', function() {
+                        return {
+                            scope: {},
+                            controller: 'MyController',
+                            bindToController: {
+                                myAttr: '@myDirective'
+                            }
+                        };
+                    });
+                }]);
+            injector.invoke(function($compile, $rootScope) {
+                var el = $('<div my-directive="abc"></div>');
+                $compile(el)($rootScope);
+                expect(gotMyAttr).toEqual('abc');
+            });
+        });
+        it('can bind through bindToController without iso scope', function() {
+            var gotMyAttr;
+            function MyController() {
+                gotMyAttr = this.myAttr;
+            }
+            var injector = createInjector(['ng',
+                function($controllerProvider, $compileProvider) {
+                    $controllerProvider.register('MyController', MyController);
+                    $compileProvider.directive('myDirective', function() {
+                        return {
+                            scope: true,
+                            controller: 'MyController',
+                            bindToController: {
+                                myAttr: '@myDirective'
+                            }
+                        };
+                    });
+                }]);
+            injector.invoke(function($compile, $rootScope) {
+                var el = $('<div my-directive="abc"></div>');
+                $compile(el)($rootScope);
+                expect(gotMyAttr).toEqual('abc');
+            });
+        });
     });
 });

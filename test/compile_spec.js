@@ -1948,5 +1948,26 @@ describe('$compile', function() {
                 expect(gotControllers.myDirective instanceof MyController).toBe(true);
             });
         });
+        it('requires itself if there is no explicit require', function() {
+            function MyController() { }
+            var gotMyController;
+            var injector = createInjector(['ng', function($compileProvider) {
+                $compileProvider.directive('myDirective', function() {
+                    return {
+                        scope: {},
+                        controller: MyController,
+                        link: function(scope, element, attrs, myController) {
+                            gotMyController = myController;
+                        }
+                    };
+                });
+            }]);
+            injector.invoke(function($compile, $rootScope) {
+                var el = $('<div my-directive></div>');
+                $compile(el)($rootScope);
+                expect(gotMyController).toBeDefined();
+                expect(gotMyController instanceof MyController).toBe(true);
+            });
+        })
     });
 });

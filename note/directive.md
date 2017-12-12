@@ -63,3 +63,8 @@ a.call(c1)
 
 ### require flag
 - `^` is "current element or one of its ancestors".
+
+### what the heck is this mean?
+Since the feature is implemented by the $controller service, you could just as well use 
+it with directive controllers, specifying something like ‘MyCtrl as myCtrl’ as the value of the con-
+troller directive attribute instead of specifying both controller and controllerAs separately.

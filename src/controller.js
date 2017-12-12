@@ -30,8 +30,17 @@ function $ControllerProvider() {
 
     this.$get = ['$injector', function($injector) {
 
+        /**
+         * ctrl, the controller constructor or controller name
+         * locals, inject $scope $element $attr, can attach controller to the $scope
+         * later, return the semi-construct controller instance
+         * identifier, the key to retrieve controller attached to the $scope
+         */
         return function(ctrl, locals, later, identifier) {
             if (_.isString(ctrl)) {
+                var match = ctrl.match(/^(\S+)(\s+as\s+(\w+))?/);
+                identifier = identifier || match[3];
+                ctrl = match[1];
                 if (controllers.hasOwnProperty(ctrl)) {
                     ctrl = controllers[ctrl];
                 } else if(globals) {

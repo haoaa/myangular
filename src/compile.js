@@ -271,13 +271,18 @@ function $CompileProvider($provide) {
 
             function getControllers(require) {
                 var value;
-                if (controllers[require]) {
-                    value = controllers[require].instance;
+                if (_.isArray(require)) {
+                    return _.map(require, getControllers);
+                } else {
+                    if (controllers[require]) {
+                        value = controllers[require].instance;
+                    }
+                    if (!value) {
+                        throw 'Controller ' + require +
+                        ' required by directive, cannot be found!';
+                    }
+                    return value;
                 }
-                if (!value) {
-                    throw 'Controller ' + require + ' required by directive, cannot be found!';
-                }
-                return value;
             }
 
             // add preLinkFn postLinkFn, set isolateScope to linkFns

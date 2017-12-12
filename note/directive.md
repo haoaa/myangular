@@ -60,3 +60,6 @@ c =new a() // controller object in new way
 c1 = Object.create(c)
 a.call(c1)
 ```
+
+### require flag
+- `^` is "current element or one of its ancestors".

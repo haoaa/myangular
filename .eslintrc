@@ -34,7 +34,8 @@
             "named": "never",
             "asyncArrow": "always"
         }],
-        "space-before-blocks": ["error", { "functions": "always", "keywords": "always", "classes": "never" }]
+        "space-before-blocks": ["error", { "functions": "always", "keywords": "always", "classes": "never" }],
+        "no-irregular-whitespace": 0
     },
     "globals": {
 

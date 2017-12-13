@@ -2321,5 +2321,29 @@ describe('$compile', function() {
                 expect(templateSpy.calls.first().args[1].myDirective).toBeDefined();
             });
         });
+
+        it('uses isolate scope for template contents', function() {
+            var linkSpy = jasmine.createSpy();
+            var injector = makeInjectorWithDirectives({
+                myDirective: function() {
+                    return {
+                        scope: {
+                            isoValue: '=myDirective'
+                        },
+                        template: '<div my-other-directive></div>'
+                    };
+                },
+                myOtherDirective: function() {
+                    return {link: linkSpy};
+                }
+            });
+            injector.invoke(function($compile, $rootScope) {
+                var el = $('<div my-directive="42"></div>');
+                $compile(el)($rootScope);
+                expect(linkSpy.calls.first().args[0]).not.toBe($rootScope);
+                expect(linkSpy.calls.first().args[0].isoValue).toBe(42);
+            });
+        });
+
     });
 });

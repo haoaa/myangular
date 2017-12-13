@@ -283,6 +283,7 @@ function $CompileProvider($provide) {
             var terminal = false;
             var preLinkFns = [], postLinkFns = [], controllers = {};
             var newScopeDirective, newIsolateScopeDirective;
+            var templateDirective;
             var controllerDirectives;
 
             // retrieve required controller
@@ -388,7 +389,13 @@ function $CompileProvider($provide) {
                     }
                 }
                 if (directive.template) {
-                    $compileNode.html(directive.template);
+                    if (templateDirective) {
+                        throw 'Multiple directives asking for template';
+                    }
+                    templateDirective = directive;
+                    $compileNode.html(_.isFunction(directive.template) ?
+                        directive.template($compileNode, attrs) :
+                        directive.template);
                 }
                 if (directive.terminal) {
                     terminal = true;

@@ -387,6 +387,9 @@ function $CompileProvider($provide) {
                         addLinkFns(linkFn.pre, linkFn.post, attrStart, attrEnd, isolateScope, require);
                     }
                 }
+                if (directive.template) {
+                    $compileNode.html(directive.template);
+                }
                 if (directive.terminal) {
                     terminal = true;
                     terminalPriority = directive.priority;

@@ -280,15 +280,18 @@ function $CompileProvider($provide) {
          * @param directives
          * @param compileNode
          * @param attrs
+         * @param previousCompileContext
          * @returns {nodeLinkFn}
          */
-        function applyDirectivesToNode(directives, compileNode, attrs) {
+        function applyDirectivesToNode(
+            directives, compileNode, attrs, previousCompileContext) {
+            previousCompileContext = previousCompileContext || {};
             var $compileNode = $(compileNode);
             var terminalPriority = -Number.MAX_VALUE;
             var terminal = false;
             var preLinkFns = [], postLinkFns = [], controllers = {};
             var newScopeDirective, newIsolateScopeDirective;
-            var templateDirective;
+            var templateDirective = previousCompileContext.templateDirective;
             var controllerDirectives;
 
             // retrieve required controller
@@ -392,7 +395,16 @@ function $CompileProvider($provide) {
                 }
 
                 if (directive.templateUrl) {
-                    compileTemplateUrl(_.drop(directives, i), $compileNode, attrs);
+                    if (templateDirective) {
+                        throw 'Multiple directives asking for template';
+                    }
+                    templateDirective = directive;
+                    compileTemplateUrl(
+                        _.drop(directives, i),
+                        $compileNode,
+                        attrs,
+                        {templateDirective : templateDirective}
+                    );
 
                     return false;
                 } else if (directive.compile) {
@@ -511,14 +523,16 @@ function $CompileProvider($provide) {
             return nodeLinkFn;
         }
 
-        function compileTemplateUrl(directives, $compileNode, attrs) {
+        function compileTemplateUrl(directives, $compileNode, attrs, previousCompileContext) {
             var origAsyncDirective = directives[0];
-            var url = origAsyncDirective.templateUrl;
+            var url = _.isFunction(origAsyncDirective.templateUrl) ?
+                origAsyncDirective.templateUrl($compileNode, attrs) :
+                origAsyncDirective.templateUrl;
             origAsyncDirective.templateUrl = null;
             $compileNode.empty();
             $http.get(url).success(function(template) {
                 $compileNode.html(template);
-                applyDirectivesToNode(directives, $compileNode, attrs);
+                applyDirectivesToNode(directives, $compileNode, attrs, previousCompileContext);
                 compileNodes($compileNode[0].childNodes);
             });
         }

@@ -290,7 +290,9 @@ function $CompileProvider($provide) {
             var $compileNode = $(compileNode);
             var terminalPriority = -Number.MAX_VALUE;
             var terminal = false;
-            var preLinkFns = [], postLinkFns = [], controllers = {};
+            var preLinkFns = previousCompileContext.preLinkFns || [],
+                postLinkFns = previousCompileContext.postLinkFns || [],
+                controllers = {};
             var newScopeDirective, newIsolateScopeDirective;
             var templateDirective = previousCompileContext.templateDirective;
             var controllerDirectives;
@@ -404,7 +406,11 @@ function $CompileProvider($provide) {
                         _.drop(directives, i),
                         $compileNode,
                         attrs,
-                        {templateDirective : templateDirective}
+                        {
+                            templateDirective : templateDirective,
+                            preLinkFns : preLinkFns,
+                            postLinkFns : postLinkFns
+                        }
                     );
 
                     return false;

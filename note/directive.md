@@ -71,3 +71,6 @@ troller directive attribute instead of specifying both controller and controller
 
 ### templateURL link
 when call the function `applyDirectivesToNode`, let's say there are three directives apply on a dom node and the last one is a template  directive. After the first two directives call their compile function
+
+### transclude
+Although the DOM you pass in will be used inside another directive’s template, its scope will still be as if it was used where you wrote it: Outside the directive’s template.

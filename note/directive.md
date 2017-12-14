@@ -68,3 +68,6 @@ a.call(c1)
 Since the feature is implemented by the $controller service, you could just as well use 
 it with directive controllers, specifying something like ‘MyCtrl as myCtrl’ as the value of the con-
 troller directive attribute instead of specifying both controller and controllerAs separately.
+
+### templateURL link
+when call the function `applyDirectivesToNode`, let's say there are three directives apply on a dom node and the last one is a template  directive. After the first two directives call their compile function

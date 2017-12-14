@@ -285,6 +285,7 @@ function $CompileProvider($provide) {
          */
         function applyDirectivesToNode(
             directives, compileNode, attrs, previousCompileContext) {
+
             previousCompileContext = previousCompileContext || {};
             var $compileNode = $(compileNode);
             var terminalPriority = -Number.MAX_VALUE;
@@ -399,7 +400,7 @@ function $CompileProvider($provide) {
                         throw 'Multiple directives asking for template';
                     }
                     templateDirective = directive;
-                    compileTemplateUrl(
+                    nodeLinkFn = compileTemplateUrl(
                         _.drop(directives, i),
                         $compileNode,
                         attrs,
@@ -528,13 +529,29 @@ function $CompileProvider($provide) {
             var url = _.isFunction(origAsyncDirective.templateUrl) ?
                 origAsyncDirective.templateUrl($compileNode, attrs) :
                 origAsyncDirective.templateUrl;
+            var afterTemplateNodeLinkFn, afterTemplateChildLinkFn;
+            var linkQueue = [];
+
             origAsyncDirective.templateUrl = null;
             $compileNode.empty();
+
             $http.get(url).success(function(template) {
                 $compileNode.html(template);
-                applyDirectivesToNode(directives, $compileNode, attrs, previousCompileContext);
-                compileNodes($compileNode[0].childNodes);
+                afterTemplateNodeLinkFn = applyDirectivesToNode(directives, $compileNode, attrs, previousCompileContext);
+                afterTemplateChildLinkFn = compileNodes($compileNode[0].childNodes);
+                _.forEach(linkQueue, function(linkCall) {
+                    afterTemplateNodeLinkFn(afterTemplateChildLinkFn, linkCall.scope, linkCall.linkNode);
+                });
+                linkQueue = null;
             });
+
+            return function delayedNodeLinkFn(_ignoreChildLinkFn, scope, linkNode) {
+                if (linkQueue) {
+                    linkQueue.push({scope: scope, linkNode : linkNode});
+                } else {
+                    afterTemplateNodeLinkFn(afterTemplateChildLinkFn, scope, linkNode);
+                }
+            };
         }
 
 

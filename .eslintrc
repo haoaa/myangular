@@ -9,7 +9,7 @@
         "phantomjs": true
     },
     "rules": {
-//        "key-spacing" :["error", { "beforeColon": true }],
+        // "key-spacing" :["error", { "beforeColon": true }],
         "indent": [1 , 4,{ "SwitchCase": 0}],
         "operator-linebreak": [2, "after", {"overrides": {"?": "after", ":": "after"}}],
         "no-unused-vars": "off",
@@ -35,7 +35,11 @@
             "asyncArrow": "always"
         }],
         "space-before-blocks": ["error", { "functions": "always", "keywords": "always", "classes": "never" }],
-        "no-irregular-whitespace": 0
+        "no-irregular-whitespace": 0,
+
+        //Possible Errors
+        "no-func-assign": "off"
+
     },
     "globals": {
 

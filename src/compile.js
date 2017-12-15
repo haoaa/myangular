@@ -209,9 +209,14 @@ function $CompileProvider($provide) {
         function compile($compileNodes) {
             var compositeLinkFn = compileNodes($compileNodes);
 
-            return function publicLinkFn(scope) {
+            return function publicLinkFn(scope, options) {
+                options =  options || {};
+                var parentBoundTranscludeFn = options.parentBoundTranscludeFn;
+                if (parentBoundTranscludeFn && parentBoundTranscludeFn.$$boundTransclude) {
+                    parentBoundTranscludeFn = parentBoundTranscludeFn.$$boundTransclude;
+                }
                 $compileNodes.data('$scope', scope);
-                compositeLinkFn(scope, $compileNodes);
+                compositeLinkFn(scope, $compileNodes, parentBoundTranscludeFn);
                 return $compileNodes;
             };
         }
@@ -247,7 +252,7 @@ function $CompileProvider($provide) {
                 }
             });
 
-            function compositeLinkFn(scope, linkNodes) {
+            function compositeLinkFn(scope, linkNodes, parentBoundTranscludeFn) {
                 var stableNodeList = [];
                 _.forEach(linkFns, function(linkFn) {
                     stableNodeList[linkFn.idx] = linkNodes[linkFn.idx];
@@ -271,6 +276,8 @@ function $CompileProvider($provide) {
                                 }
                                 return linkFn.nodeLinkFn.transclude(transcludeScope);
                             };
+                        } else if (parentBoundTranscludeFn) {
+                            boundTranscludeFn = parentBoundTranscludeFn;
                         }
                         linkFn.nodeLinkFn(
                             linkFn.childLinkFn,
@@ -280,7 +287,8 @@ function $CompileProvider($provide) {
                     } else {
                         linkFn.childLinkFn(
                             scope,
-                            node.childNodes
+                            node.childNodes,
+                            parentBoundTranscludeFn
                         );
                     }
                 });
@@ -528,9 +536,12 @@ function $CompileProvider($provide) {
                     }
                 });
 
+                // transcludeScope was provided by user
                 function scopeBoundTranscludeFn(transcludeScope) {
                     return boundTranscludeFn(transcludeScope, scope);
                 }
+                scopeBoundTranscludeFn.$$boundTransclude = boundTranscludeFn;
+
                 _.forEach(preLinkFns, function(linkFn) {
                     linkFn(
                         linkFn.isolateScope ? isolateScope : scope,
@@ -549,7 +560,7 @@ function $CompileProvider($provide) {
                         )) {
                         scopeToChild = isolateScope;
                     }
-                    childLinkFn(scopeToChild, linkNode.childNodes);
+                    childLinkFn(scopeToChild, linkNode.childNodes, boundTranscludeFn);
                 }
                 _.forEachRight(postLinkFns, function(linkFn) {
                     linkFn(

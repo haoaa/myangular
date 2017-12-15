@@ -89,3 +89,25 @@ if (linkFn.nodeLinkFn.transcludeOnThisElement) {
 }
 ```
 - the `containingScope` will be decide in the nodeLinkFn.
+
+
+### cloneAttachFn
+
+```js
+boundTranscludeFn = function (transcludeScope, cloneAttachFn, containingScope) {
+    if (!transcludeScope) {
+        transcludeScope = scope.$new(false, containingScope);
+    }
+    return linkFn.nodeLinkFn.transclude(transcludeScope, cloneAttachFn);
+};
+```
+call
+```js
+function compile($compileNodes) {
+    var compositeLinkFn = compileNodes($compileNodes);
+
+    return function publicLinkFn(scope, cloneAttachFn, options) {// transclude goes here
+    }
+}
+```
+

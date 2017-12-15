@@ -327,7 +327,8 @@ function $CompileProvider($provide) {
                 newIsolateScopeDirective = previousCompileContext.newIsolateScopeDirective;
             var templateDirective = previousCompileContext.templateDirective;
             var controllerDirectives = previousCompileContext.controllerDirectives;
-            var childTranscludeFn, hasTranscludeDirective;
+            var childTranscludeFn;
+            var hasTranscludeDirective = previousCompileContext.hasTranscludeDirective;
 
             // retrieve required controller
             function getControllers(require, $element) {
@@ -452,6 +453,7 @@ function $CompileProvider($provide) {
                             templateDirective : templateDirective,
                             newIsolateScopeDirective : newIsolateScopeDirective,
                             controllerDirectives : controllerDirectives,
+                            hasTranscludeDirective : hasTranscludeDirective,
                             preLinkFns : preLinkFns,
                             postLinkFns : postLinkFns
                         }
@@ -602,6 +604,7 @@ function $CompileProvider($provide) {
             var linkQueue = [];
 
             origAsyncDirective.templateUrl = null;
+            origAsyncDirective.transclude = null;
             $compileNode.empty();
 
             $http.get(url).success(function(template) {
@@ -609,16 +612,20 @@ function $CompileProvider($provide) {
                 afterTemplateNodeLinkFn = applyDirectivesToNode(directives, $compileNode, attrs, previousCompileContext);
                 afterTemplateChildLinkFn = compileNodes($compileNode[0].childNodes);
                 _.forEach(linkQueue, function(linkCall) {
-                    afterTemplateNodeLinkFn(afterTemplateChildLinkFn, linkCall.scope, linkCall.linkNode);
+                    afterTemplateNodeLinkFn(
+                        afterTemplateChildLinkFn,
+                        linkCall.scope,
+                        linkCall.linkNode,
+                        linkCall.boundTranscludeFn);
                 });
                 linkQueue = null;
             });
+            return function delayedNodeLinkFn(_ignoreChildLinkFn, scope, linkNode, boundTranscludeFn) {
 
-            return function delayedNodeLinkFn(_ignoreChildLinkFn, scope, linkNode) {
                 if (linkQueue) {
-                    linkQueue.push({scope: scope, linkNode : linkNode});
+                    linkQueue.push({scope: scope, linkNode : linkNode, boundTranscludeFn: boundTranscludeFn});
                 } else {
-                    afterTemplateNodeLinkFn(afterTemplateChildLinkFn, scope, linkNode);
+                    afterTemplateNodeLinkFn(afterTemplateChildLinkFn, scope, linkNode, boundTranscludeFn);
                 }
             };
         }

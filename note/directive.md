@@ -111,3 +111,14 @@ function compile($compileNodes) {
 }
 ```
 
+> Here’s the biggest reason the clone attach function is a function. When you don’t supply your own 
+  scope, and a default transclusion scope is used, the clone attach function is the only way you can 
+  gain access to that scope from your transclusion directive. And you do often need access to it: If 
+  you remove the transcluded DOM before your transclusion directive itself gets removed, as the 
+  documentation states, it is your responsibility to destroy the transclusion scope, and you can only 
+  do that when you have access to it.    
+  
+  Furthermore, the clone attach function lets you put data on the transclusion scope before the tran-
+  scluded content gets linked. So you can essentially pass additional data to the transcluded content 
+  via the scope, as the following test case shows. It passes right away as we’ve already implemented 
+  everything it needs, but we include it for the purpose of illustrating the point:

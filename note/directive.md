@@ -74,3 +74,18 @@ when call the function `applyDirectivesToNode`, let's say there are three direct
 
 ### transclude
 Although the DOM you pass in will be used inside another directive’s template, its scope will still be as if it was used where you wrote it: Outside the directive’s template.
+
+### transclude scope
+We should create a special transclusion scope that prototypally inherits from the surrounding scope, but whose $parent is set to the Scope of the transclusion directive.
+
+- `function compositeLinkFn(scope, linkNodes) {` the scope passed was the surrounding scope.
+```js
+var boundTranscludeFn;
+if (linkFn.nodeLinkFn.transcludeOnThisElement) {
+    boundTranscludeFn = function(containingScope) {
+        var transcludeScope = scope.$new(false, containingScope);
+        return linkFn.nodeLinkFn.transclude(transcludeScope);
+    };
+}
+```
+- the `containingScope` will be decide in the nodeLinkFn.

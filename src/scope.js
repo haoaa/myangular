@@ -292,7 +292,7 @@ function $RootScopeProvider() {
             if (this.$parent) {
                 var siblings = this.$parent.$$children;
                 var idxOfThis = siblings.indexOf(this);
-                if (idxOfThis) {
+                if (~idxOfThis) {
                     siblings.splice(idxOfThis, 1);
                 }
             }

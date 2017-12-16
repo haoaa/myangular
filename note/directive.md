@@ -122,3 +122,14 @@ function compile($compileNodes) {
   scluded content gets linked. So you can essentially pass additional data to the transcluded content 
   via the scope, as the following test case shows. It passes right away as we’ve already implemented 
   everything it needs, but we include it for the purpose of illustrating the point:
+
+### Full Element Transclusion
+
+```js
+  var $originalCompileNode = $compileNode; 
+  $compileNode = $(document.createComment( 
+    ' ' + directive.name + ': ' + attrs[directive.name] + ' '
+  )); 
+  $originalCompileNode.replaceWith($compileNode);
+``` 
+After `replaceWith($compileNode)` $originalCompileNode still reference to the original $compileNode.

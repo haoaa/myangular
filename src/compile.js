@@ -119,6 +119,16 @@ function $CompileProvider($provide) {
         }
     };
 
+    this.component = function(name, options) {
+        function factory() {
+            return {
+
+            };
+        }
+
+        this.directive(name, factory);
+    };
+
     this.$get = ['$injector', '$rootScope', '$parse', '$controller', '$http', '$interpolate', function(
         $injector,
         $rootScope,

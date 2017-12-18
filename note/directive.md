@@ -133,3 +133,12 @@ function compile($compileNodes) {
   $originalCompileNode.replaceWith($compileNode);
 ``` 
 After `replaceWith($compileNode)` $originalCompileNode still reference to the original $compileNode.
+
+### in test case 'fires observers just once upon registration'
+  $observe add $$asyncQueue in the addAttrInterpolateDirective link phase. We need skip the observerSpy called after digest kick in. Cause interpolation will happen after the $$asyncQueue get called. Meanwhile interpolateFn watcher set call the $$observers due to $set get called.
+  
+```js 
+scope.$watch(interpolateFn, function(newValue) {
+    attrs.$set(name, newValue);
+});
+```

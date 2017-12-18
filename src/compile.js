@@ -3,6 +3,8 @@
 var _ = require('lodash');
 var $ = require('jquery');
 
+var identifierForController = require('./controller').identifierForController;
+
 var PREFIX_REGEXP = /(x[\:\-_]|data[\:\-_])/i;
 var BOOLEAN_ATTRS = {
     multiple: true,
@@ -123,7 +125,12 @@ function $CompileProvider($provide) {
         function factory() {
             return {
                 restrict : 'E',
-                controller : options.controller
+                controller : options.controller,
+                controllerAs :  options.controllerAs ||
+                                identifierForController(options.controller) ||
+                                '$ctrl',
+                scope : {},
+                bindToController : options.bindings || {}
             };
         }
 

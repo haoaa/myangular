@@ -127,6 +127,15 @@ function $CompileProvider($provide) {
         $http,
         $interpolate) {
 
+        var startSymbol = $interpolate.startSymbol();
+        var endSymbol = $interpolate.endSymbol();
+        var denormalizeTemplate = (startSymbol === '{{' && endSymbol === '}}') ?
+            _.identity :
+            function(template) {
+                return template.replace(/\{\{/g, startSymbol)
+                    .replace(/\}\}/g, endSymbol);
+            };
+
         function Attributes(element) {
             this.$$element = element;
             this.$attr = {};  // normalized-to-denormalized mapping
@@ -456,9 +465,11 @@ function $CompileProvider($provide) {
                         throw 'Multiple directives asking for template';
                     }
                     templateDirective = directive;
-                    $compileNode.html(_.isFunction(directive.template) ?
+                    var template = _.isFunction(directive.template) ?
                         directive.template($compileNode, attrs) :
-                        directive.template);
+                        directive.template;
+                    template = denormalizeTemplate(template);
+                    $compileNode.html(template);
                 }
 
                 if (directive.templateUrl) {
@@ -633,7 +644,7 @@ function $CompileProvider($provide) {
             $compileNode.empty();
 
             $http.get(url).success(function(template) {
-                $compileNode.html(template);
+                $compileNode.html(denormalizeTemplate(template));
                 afterTemplateNodeLinkFn = applyDirectivesToNode(directives, $compileNode, attrs, previousCompileContext);
                 afterTemplateChildLinkFn = compileNodes($compileNode[0].childNodes);
                 _.forEach(linkQueue, function(linkCall) {

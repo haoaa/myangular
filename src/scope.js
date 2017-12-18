@@ -33,7 +33,7 @@ function $RootScopeProvider() {
             watchFn = $parse(watchFn);
 
             if (watchFn.$$watchDelegate) {
-                return watchFn.$$watchDelegate(self, watchFn, listenerFn, valueEq);
+                return watchFn.$$watchDelegate(self, listenerFn, valueEq, watchFn);
             }
 
             var watcher = {

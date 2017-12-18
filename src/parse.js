@@ -980,7 +980,7 @@ ASTCompiler.prototype.filterPrefix = function() {
     }
 };
 
-function constantWatchDelegate(scope, watchFn, listenerFn, valueEq) {
+function constantWatchDelegate(scope, listenerFn, valueEq, watchFn) {
     var unwatch = scope.$watch(
         function() {
             return watchFn(scope);
@@ -996,7 +996,7 @@ function constantWatchDelegate(scope, watchFn, listenerFn, valueEq) {
     return unwatch;
 }
 
-function oneTimeWatchDelegate(scope, watchFn, listenerFn, valueEq) {
+function oneTimeWatchDelegate(scope, listenerFn, valueEq, watchFn) {
     var lastValue;
     var unwatch = scope.$watch(
         function() {
@@ -1020,7 +1020,7 @@ function oneTimeWatchDelegate(scope, watchFn, listenerFn, valueEq) {
     return unwatch;
 }
 
-function oneTimeLiteralWatchDelegate(scope, watchFn, listenerFn, valueEq) {
+function oneTimeLiteralWatchDelegate(scope, listenerFn, valueEq, watchFn) {
     function isAllDefined(val) {
         return !_.some(val, _.isUndefined);
     }
@@ -1045,7 +1045,7 @@ function oneTimeLiteralWatchDelegate(scope, watchFn, listenerFn, valueEq) {
     return unwatch;
 }
 
-function inputsWatchDelegate(scope, watchFn, listenerFn, valueEq) {
+function inputsWatchDelegate(scope, listenerFn, valueEq, watchFn) {
     var inputExpressions = watchFn.inputs;
 
     var oldValues = _.times(inputExpressions.length, _.constant(function() {}));

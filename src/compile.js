@@ -861,6 +861,7 @@ function $CompileProvider($provide) {
                                 attrs.$$observers = attrs.$$observers || {};
                                 attrs.$$observers[name] = attrs.$$observers[name] || [];
                                 attrs.$$observers[name].$$inter = true;
+
                                 attrs[name] = interpolateFn(scope);
                                 scope.$watch(interpolateFn, function(newValue) {
                                     attrs.$set(name, newValue);

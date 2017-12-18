@@ -16,6 +16,13 @@ describe('$compile', function() {
             $compileProvider.directive.apply($compileProvider, args);
         }]);
     }
+
+    function makeInjectorWithComponent(name, options) {
+        return createInjector(['ng', function($compileProvider) {
+            $compileProvider.component(name, options);
+        }]);
+    }
+
     beforeEach(function() {
         publishExternalAPI();
         var injector = createInjector(['ng']);
@@ -3746,6 +3753,38 @@ describe('$compile', function() {
             myModule.component('myComponent', {});
             var injector = createInjector(['ng', 'myModule']);
             expect(injector.has('myComponentDirective')).toBe(true);
+        });
+
+        it('are element directives with controllers', function() {
+            var controllerInstantiated = false;
+            var componentElement;
+            var injector = makeInjectorWithComponent('myComponent', {
+                controller: function($element) {
+                    controllerInstantiated = true;
+                    componentElement = $element;
+                }
+            });
+            injector.invoke(function($compile, $rootScope) {
+                var el = $('<my-component></my-component>');
+                $compile(el)($rootScope);
+                expect(controllerInstantiated).toBe(true);
+                expect(el[0]).toBe(componentElement[0]);
+            });
+        });
+
+        it('cannot be applied to an attribute', function() {
+            var controllerInstantiated = false;
+            var injector = makeInjectorWithComponent('myComponent', {
+                restrict: 'A', // Will be ignored
+                controller: function() {
+                    controllerInstantiated = true;
+                }
+            });
+            injector.invoke(function($compile, $rootScope) {
+                var el = $('<div my-component></div>');
+                $compile(el)($rootScope);
+                expect(controllerInstantiated).toBe(false);
+            });
         });
 
     });

@@ -84,6 +84,19 @@ function getDirectiveRequire(directive, name) {
     return require;
 }
 
+function makeInjectable(template, $injector) {
+    if (_.isFunction(template) || _.isArray(template)) {
+        return function(element, attrs) {
+            return $injector.invoke(template, this, {
+                $element : element,
+                $attrs : attrs
+            });
+        };
+    } else {
+        return template;
+    }
+}
+
 function $CompileProvider($provide) {
 
     var hasDirectives = {};
@@ -122,7 +135,7 @@ function $CompileProvider($provide) {
     };
 
     this.component = function(name, options) {
-        function factory() {
+        function factory($injector) {
             return {
                 restrict : 'E',
                 controller : options.controller,
@@ -130,10 +143,13 @@ function $CompileProvider($provide) {
                                 identifierForController(options.controller) ||
                                 '$ctrl',
                 scope : {},
-                bindToController : options.bindings || {}
+                bindToController : options.bindings || {},
+                template : makeInjectable(options.template, $injector),
+                templateUrl : makeInjectable(options.templateUrl, $injector)
             };
         }
 
+        factory.$inject = ['$injector'];
         this.directive(name, factory);
     };
 

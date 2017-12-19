@@ -619,6 +619,12 @@ function $CompileProvider($provide) {
                     if (controllerInstance.$onInit) {
                         controllerInstance.$onInit();
                     }
+
+                    if (controllerInstance.$onDestroy) {
+                        (newIsolateScopeDirective ? isolateScope : scope).$on('$destroy', function() {
+                            controllerInstance.$onDestroy();
+                        });
+                    }
                 });
 
                 // transcludeScope was provided by user

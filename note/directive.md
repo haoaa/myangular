@@ -47,7 +47,7 @@ One-to-one correspondence between parent and child attributes.| Child attributes
 ### bindToController
 which controls where all the isolate scope bindings will be attached. With `controllerAs` (bind controller to scope )option, which then makes the controller with all those isolate bindings available to child elements
 
-### `emi-constructed` in Controllers on Isolate Scope Directives
+### `semi-constructed` in Controllers on Isolate Scope Directives
 •  It is a function which, when called, will invoke the controller constructor
 •  It has an attribute called instance that points to the controller object.
 

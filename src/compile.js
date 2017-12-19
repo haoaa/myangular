@@ -97,10 +97,30 @@ function makeInjectable(template, $injector) {
     }
 }
 
+function UNINITIALIZED_VALUE() {}
+var _UNINITIALIZED_VALUE = new UNINITIALIZED_VALUE();
+
+function SimpleChange(previous, current) {
+    this.previousValue = previous;
+    this.currentValue  = current;
+}
+
+SimpleChange.prototype.isFirstChange = function() {
+    return this.previousValue === _UNINITIALIZED_VALUE;
+};
+
 function $CompileProvider($provide) {
 
     var hasDirectives = {};
+    var TTL = 10;
 
+    this.onChangesTtl = function(value) {
+        if (arguments.length) {
+            TTL = value;
+            return this;
+        }
+        return TTL;
+    };
     this.directive = function(name, directiveFactory) {
         if (_.isString(name)) {
             if (name === 'hasOwnProperty') {
@@ -162,6 +182,27 @@ function $CompileProvider($provide) {
         $controller,
         $http,
         $interpolate) {
+
+        var onChangesQueue;
+        var onChangesTtl = TTL;
+
+        function flushOnChanges() {
+            try {
+                onChangesTtl--;
+                if (!onChangesTtl) {
+                    onChangesQueue = null;
+                    throw TTL + ' $onChanges() iterations reached. Aborting!';
+                }
+                $rootScope.$apply(function() {
+                    _.forEach(onChangesQueue, function(onChangesHook) {
+                        onChangesHook();
+                    });
+                    onChangesQueue = null;
+                });
+            } finally {
+                onChangesTtl++;
+            }
+        }
 
         var startSymbol = $interpolate.startSymbol();
         var endSymbol = $interpolate.endSymbol();
@@ -590,7 +631,7 @@ function $CompileProvider($provide) {
 
                 var scopeDirective = newIsolateScopeDirective || newScopeDirective;
                 if (scopeDirective && controllers[scopeDirective.name]) {
-                    initializeDirectiveBindings(
+                    controllers[scopeDirective.name].initialChanges = initializeDirectiveBindings(
                         scope,
                         attrs,
                         controllers[scopeDirective.name].instance,
@@ -620,6 +661,9 @@ function $CompileProvider($provide) {
                         controllerInstance.$onInit();
                     }
 
+                    if (controllerInstance.$onChanges) {
+                        controllerInstance.$onChanges(controller.initialChanges);
+                    }
                     if (controllerInstance.$onDestroy) {
                         (newIsolateScopeDirective ? isolateScope : scope).$on('$destroy', function() {
                             controllerInstance.$onDestroy();
@@ -724,6 +768,33 @@ function $CompileProvider($provide) {
 
 
         function initializeDirectiveBindings(scope, attrs, destination, bindings, newScope) {
+            var initialChanges = {};
+            var changes;
+
+            function triggerOnChanges() {
+                try {
+                    destination.$onChanges(changes);
+                } finally {
+                    changes = null;
+                }
+            }
+
+            function recordChanges(key, currentValue, previousValue) {
+                if (destination.$onChanges && currentValue !== previousValue) {
+                    if (!onChangesQueue) {
+                        onChangesQueue = [];
+                        $rootScope.$$postDigest(flushOnChanges);
+                    }
+                    if (!changes) {
+                        changes = {};
+                        onChangesQueue.push(triggerOnChanges);
+                    }
+                    if (changes[key]) {
+                        previousValue = changes[key].previousValue;
+                    }
+                    changes[key] = new SimpleChange(previousValue, currentValue);
+                }
+            }
             _.forEach(
                 bindings,
                 function(definition, scopeName) {
@@ -733,11 +804,15 @@ function $CompileProvider($provide) {
                     switch (definition.mode) {
                     case '@':
                         attrs.$observe(attrName, function(newAttrValue) {
+                            var oldValue = destination[scopeName];
                             destination[scopeName] = newAttrValue;
+                            recordChanges(scopeName, destination[scopeName], oldValue);
                         });
                         if (attrs[attrName]) {
                             destination[scopeName] = $interpolate(attrs[attrName])(scope);
                         }
+                        initialChanges[scopeName] =
+                            new SimpleChange(_UNINITIALIZED_VALUE, destination[scopeName]);
                         break;
                     case '<':
                         if (definition.optional && !attrs[attrName]) {
@@ -747,9 +822,13 @@ function $CompileProvider($provide) {
                         destination[scopeName] = parentGetParseFun(scope);
                         unwatch = scope.$watch(parentGetParseFun,
                             function(newValue) {
+                                var oldValue = destination[scopeName];
                                 destination[scopeName] = newValue;
+                                recordChanges(scopeName, destination[scopeName], oldValue);
                             });
                         newScope.$on('$destroy', unwatch);
+                        initialChanges[scopeName] =
+                            new SimpleChange(_UNINITIALIZED_VALUE, destination[scopeName]);
                         break;
                     case '=':
                         if (definition.optional && !attrs[attrName]) {
@@ -788,6 +867,7 @@ function $CompileProvider($provide) {
                         };
                     }
                 });
+            return initialChanges;
         }
         /**
          * collect directive info from e/a/c/m, and set attributes to {attrs}(normalized name mapping)

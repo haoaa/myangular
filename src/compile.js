@@ -145,7 +145,9 @@ function $CompileProvider($provide) {
                 scope : {},
                 bindToController : options.bindings || {},
                 template : makeInjectable(options.template, $injector),
-                templateUrl : makeInjectable(options.templateUrl, $injector)
+                templateUrl : makeInjectable(options.templateUrl, $injector),
+                transclude : options.transclude,
+                require : options.require
             };
         }
 
@@ -609,6 +611,13 @@ function $CompileProvider($provide) {
                         var controllerInstance = controllers[directive.name].instance;
                         var requiredControllers = getControllers(require, $element);
                         _.assign(controllerInstance, requiredControllers);
+                    }
+                });
+
+                _.forEach(controllers, function(controller) {
+                    var controllerInstance = controller.instance;
+                    if (controllerInstance.$onInit) {
+                        controllerInstance.$onInit();
                     }
                 });
 

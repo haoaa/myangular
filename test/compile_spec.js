@@ -3988,5 +3988,81 @@ describe('$compile', function() {
             });
         });
 
+        it('may use transclusion', function() {
+            var injector = makeInjectorWithComponent('myComponent', {
+                transclude: true,
+                template: '<div ng-transclude></div>'
+            });
+            injector.invoke(function($compile, $rootScope) {
+                var el = $('<my-component>Transclude me</my-component>');
+                $compile(el)($rootScope);
+                expect(el.find('div').text()).toEqual('Transclude me');
+            });
+        });
+
+        it('may require other directive controllers', function() {
+            var secondControllerInstance;
+            var injector = createInjector(['ng', function($compileProvider) {
+                $compileProvider.component('first', {
+                    controller: function() { }
+                });
+                $compileProvider.component('second', {
+                    require: {first: '^'},
+                    controller: function() {
+                        secondControllerInstance = this;
+                    }
+                });
+            }]);
+            injector.invoke(function($compile, $rootScope) {
+                var el = $('<first><second></second></first>');
+                $compile(el)($rootScope);
+                expect(secondControllerInstance.first).toBeDefined();
+            });
+        });
+    });
+
+
+    describe('lifecycle', function() {
+
+        it('calls $onInit after all ctrls created before linking', function() {
+            var invocations = [];
+            var injector = createInjector(['ng', function($compileProvider) {
+                $compileProvider.component('first', {
+                    controller: function() {
+                        invocations.push('first controller created');
+                        this.$onInit = function() {
+                            invocations.push('first controller $onInit');
+                        };
+                    }
+                });
+                $compileProvider.directive('second', function() {
+                    return {
+                        controller: function() {
+                            invocations.push('second controller created');
+                            this.$onInit = function() {
+                                invocations.push('second controller $onInit');
+                            };
+                        },
+                        link: {
+                            pre: function() { invocations.push('second prelink'); },
+                            post: function() { invocations.push('second postlink'); }
+                        }
+                    };
+                });
+            }]);
+            injector.invoke(function($compile, $rootScope) {
+                var el = $('<first second></first>');
+                $compile(el)($rootScope);
+                expect(invocations).toEqual([
+                    'first controller created',
+                    'second controller created',
+                    'first controller $onInit',
+                    'second controller $onInit',
+                    'second prelink',
+                    'second postlink'
+                ]);
+            });
+        });
+
     });
 });

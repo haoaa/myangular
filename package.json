@@ -9,7 +9,9 @@
   "scripts": {
     "lint": "eslint  --ext .js src test --fix",
     "pretest": "npm run lint",
-    "test": "karma start"
+    "test": "karma start",
+    "build": "browserify src/bootstrap.js > myangular.js",
+    "build:minified": "browserify src/bootstrap.js | uglifyjs -mc > myangular.min.js"
   },
   "keywords": [],
   "author": "haoqi <290058005@qq.com> (http://haoqi.party/)",
@@ -25,6 +27,7 @@
     "karma-phantomjs-launcher": "^1.0.4",
     "phantomjs-prebuilt": "^2.1.16",
     "sinon": "^4.1.1",
+    "uglify-js": "^3.2.2",
     "watchify": "^3.9.0"
   },
   "dependencies": {

@@ -5,7 +5,7 @@ var bootstrap = require('../src/bootstrap');
 
 describe('bootstrap', function() {
 
-    describe('manual', function() {
+    xdescribe('manual', function() {
 
         it('is available', function() {
 

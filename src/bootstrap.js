@@ -44,7 +44,7 @@ $(document).ready(function() {
             var attrName = prefix + 'strict-di';
             return foundAppElement.hasAttribute(attrName);
         });
-        window.angular_bootstrap(
+        window.angular.bootstrap(
             foundAppElement,
             foundModule ? [foundModule] : [],
             config

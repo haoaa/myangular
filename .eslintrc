@@ -38,8 +38,8 @@
         "no-irregular-whitespace": 0,
 
         //Possible Errors
-        "no-func-assign": "off"
-
+        "no-func-assign": "off",
+        "no-undef": [1]
     },
     "globals": {
 
